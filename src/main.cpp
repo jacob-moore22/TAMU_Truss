@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
     std::ostringstream name0;
     name0 << out_dir << "/results_step_" << std::setfill('0') << std::setw(width) << 0 << ".vtk";
     write_vtk(name0.str(), m.nodes, m.elems, u_zero, stress_zero);
-    std::cout << "load step 0/" << n_steps << " (factor=0, initial conditions): wrote " << name0.str() << "\n";
+    //std::cout << "load step 0/" << n_steps << " (factor=0, initial conditions): wrote " << name0.str() << "\n";
 
     for (int step = 1; step <= n_steps; ++step) {
         double factor = (double)step / n_steps;
@@ -48,20 +48,20 @@ int main(int argc, char **argv) {
         name << out_dir << "/results_step_" << std::setfill('0') << std::setw(width) << step << ".vtk";
         write_vtk(name.str(), m.nodes, m.elems, u_vec, stresses);
 
-        std::cout << "load step " << step << "/" << n_steps << " (factor=" << factor << "):\n";
-        std::cout << "  displacements:\n";
-        for (int i = 0; i < (int)m.nodes.size(); ++i) {
-            std::cout << "    node " << (i+1) << ": ux=" << u_vec[2*i] << " uy=" << u_vec[2*i+1] << "\n";
-        }
-        std::cout << "  reactions:\n";
-        for (const auto &b : m.bcs) {
-            int dof = 2*(b.node-1) + (b.dof-1);
-            std::cout << "    node " << b.node << " dof " << b.dof << ": " << r_vec[dof] << "\n";
-        }
-        std::cout << "  axial stresses:\n";
-        for (int i = 0; i < (int)m.elems.size(); ++i) {
-            std::cout << "    elem " << (i+1) << ": " << stresses[i] << "\n";
-        }
+        // std::cout << "load step " << step << "/" << n_steps << " (factor=" << factor << "):\n";
+        //std::cout << "  displacements:\n";
+        // for (int i = 0; i < (int)m.nodes.size(); ++i) {
+        //     std::cout << "    node " << (i+1) << ": ux=" << u_vec[2*i] << " uy=" << u_vec[2*i+1] << "\n";
+        // }
+        // std::cout << "  reactions:\n";
+        // for (const auto &b : m.bcs) {
+        //     int dof = 2*(b.node-1) + (b.dof-1);
+        //     std::cout << "    node " << b.node << " dof " << b.dof << ": " << r_vec[dof] << "\n";
+        // }
+        // std::cout << "  axial stresses:\n";
+        // for (int i = 0; i < (int)m.elems.size(); ++i) {
+        //     std::cout << "    elem " << (i+1) << ": " << stresses[i] << "\n";
+        // }
     }
 
     write_vtk(out_path, m.nodes, m.elems, u_vec, stresses);
