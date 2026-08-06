@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TAMU_Truss</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --muted: #5a5a5a;
+    --border: #e0e0e0;
+    --accent: #2f6fed;
+    --code-bg: #f4f4f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1115;
+      --fg: #eaeaea;
+      --muted: #a0a0a0;
+      --border: #2a2d34;
+      --accent: #7aa2ff;
+      --code-bg: #1a1d23;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    padding: 2rem 1rem;
+  }
+  main {
+    max-width: 640px;
+    width: 100%;
+  }
+  h1 {
+    font-size: 1.75rem;
+    margin: 0 0 0.5rem;
+  }
+  .badges {
+    margin: 0 0 1.25rem;
+  }
+  .badges img {
+    height: 20px;
+    vertical-align: middle;
+  }
+  p.lede {
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 0 0 2rem;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  .card {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    margin-bottom: 0.75rem;
+    transition: border-color 0.15s ease;
+  }
+  .card:hover {
+    border-color: var(--accent);
+  }
+  .card .title {
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .card .desc {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+  }
+  footer {
+    margin-top: 2rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  footer a {
+    color: inherit;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>TAMU_Truss</h1>
+  <div class="badges">
+    <a href="https://github.com/jacob-moore22/TAMU_Truss/actions/workflows/ci.yml">
+      <img src="https://github.com/jacob-moore22/TAMU_Truss/actions/workflows/ci.yml/badge.svg" alt="CI status">
+    </a>
+  </div>
+  <p class="lede">
+    Basic 2D truss FEM solver (direct stiffness method), with a hand-rolled
+    Gaussian elimination. Ramps applied loads from 0 to full value over
+    <em>N</em> load steps and dumps a VTK file per step.
+  </p>
+
+  <a class="card" href="./doxygen/index.html">
+    <div class="title">View API Documentation &rarr;</div>
+    <div class="desc">Doxygen-generated reference for the solver, I/O, and VTK writer API.</div>
+  </a>
+
+  <a class="card" href="https://github.com/jacob-moore22/TAMU_Truss">
+    <div class="title">Source on GitHub &rarr;</div>
+    <div class="desc">Build instructions, input format, and <code>make test</code> details in the README.</div>
+  </a>
+
+  <footer>
+    Built with Doxygen, published from <code>main</code> via GitHub Actions.
+  </footer>
+</main>
+</body>
+</html>

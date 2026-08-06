@@ -1,6 +1,7 @@
 # TAMU_Truss
 
 [![CI](https://github.com/jacob-moore22/TAMU_Truss/actions/workflows/ci.yml/badge.svg)](https://github.com/jacob-moore22/TAMU_Truss/actions/workflows/ci.yml)
+[![Docs](https://github.com/jacob-moore22/TAMU_Truss/actions/workflows/docs.yml/badge.svg)](https://jacob-moore22.github.io/TAMU_Truss/)
 
 Basic 2D truss FEM solver (direct stiffness method), code split across `src/`/`include/`. No external deps, hand-rolled Gaussian elimination. Ramps the applied loads from 0 to full value over N load steps and dumps a VTK file per step.
 
@@ -43,3 +44,21 @@ ctest --test-dir build --output-on-failure
 ```
 
 Tests run automatically on every pull request via GitHub Actions (`.github/workflows/ci.yml`).
+
+## Documentation
+
+API docs are generated with Doxygen and published to [jacob-moore22.github.io/TAMU_Truss](https://jacob-moore22.github.io/TAMU_Truss/) on every push to `main`.
+
+To build locally:
+
+```
+doxygen Doxyfile
+```
+
+Output goes to `doxygen-build/html/index.html`. Note: opening `docs/index.html` directly won't work — its "View API Documentation" link expects the combined layout the Pages workflow assembles. To preview that layout locally:
+
+```
+make docs
+```
+
+Then open `site/index.html`.

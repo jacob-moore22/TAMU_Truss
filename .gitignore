@@ -1,3 +1,5 @@
 build/
 results/
 truss_solver
+doxygen-build/
+site/
