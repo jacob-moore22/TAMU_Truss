@@ -1,0 +1,62 @@
+{
+  "include/io.h": {
+    "mtime": 1785433512.6157672,
+    "ast_hash": "6e080983be633cf1551b272660454993",
+    "semantic_hash": "6e080983be633cf1551b272660454993"
+  },
+  "include/solver.h": {
+    "mtime": 1785433534.6052756,
+    "ast_hash": "4b2bb4a50991cfeb25070fb332e84128",
+    "semantic_hash": "4b2bb4a50991cfeb25070fb332e84128"
+  },
+  "include/types.h": {
+    "mtime": 1785434207.1051762,
+    "ast_hash": "858ab014de209368c0644b6532bc460d",
+    "semantic_hash": "858ab014de209368c0644b6532bc460d"
+  },
+  "include/vtk_writer.h": {
+    "mtime": 1785433556.6684144,
+    "ast_hash": "373c3e8640c1e4cf49e3dbdafbdca4cc",
+    "semantic_hash": "373c3e8640c1e4cf49e3dbdafbdca4cc"
+  },
+  "src/io.cpp": {
+    "mtime": 1785434219.1981819,
+    "ast_hash": "9f0c642c9db28919ac6371fc5f3dc100",
+    "semantic_hash": "9f0c642c9db28919ac6371fc5f3dc100"
+  },
+  "src/main.cpp": {
+    "mtime": 1785436348.3243918,
+    "ast_hash": "aef03449d38b4391ef9c288e797fc2ef",
+    "semantic_hash": "aef03449d38b4391ef9c288e797fc2ef"
+  },
+  "src/solver.cpp": {
+    "mtime": 1785433549.5133092,
+    "ast_hash": "866ad1775402ecc67c20c0387f38b862",
+    "semantic_hash": "866ad1775402ecc67c20c0387f38b862"
+  },
+  "src/vtk_writer.cpp": {
+    "mtime": 1785434423.894618,
+    "ast_hash": "141bbe80202368424c20d3fcb345e430",
+    "semantic_hash": "141bbe80202368424c20d3fcb345e430"
+  },
+  "README.md": {
+    "mtime": 1785435179.0351562,
+    "ast_hash": "261c0290ca4e410418810847a2002bc2",
+    "semantic_hash": "261c0290ca4e410418810847a2002bc2"
+  },
+  "examples/fink_truss.txt": {
+    "mtime": 1785434807.3939734,
+    "ast_hash": "7ef06f2bff370f1b0d09f7c2bbbb9adf",
+    "semantic_hash": "7ef06f2bff370f1b0d09f7c2bbbb9adf"
+  },
+  "examples/howe_truss.txt": {
+    "mtime": 1785435713.6662228,
+    "ast_hash": "b8666e045789484da50413fbd287a6ea",
+    "semantic_hash": "b8666e045789484da50413fbd287a6ea"
+  },
+  "examples/input_triangle.txt": {
+    "mtime": 1785434233.8998847,
+    "ast_hash": "56293bf397332873a92093a83a5f0201",
+    "semantic_hash": "56293bf397332873a92093a83a5f0201"
+  }
+}

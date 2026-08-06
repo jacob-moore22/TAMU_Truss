@@ -1,0 +1,22 @@
+*NODES
+# ID  X  Y
+1 0.0 0.0
+2 10.0 0.0
+
+*ELEMENTS
+# ID  Node1  Node2  Area  YoungsModulus
+1 1 2 1.0 100.0
+
+*BOUNDARIES
+# Node  DOF(1=X, 2=Y)  Value
+1 1 0.0
+1 2 0.0
+2 2 0.0
+
+*FORCES
+# Node  DOF(1=X, 2=Y)  Value
+2 1 100.0
+
+*LOAD_STEPS
+# N
+1
