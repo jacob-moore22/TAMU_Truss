@@ -15,7 +15,7 @@ std::array<std::array<double, 4>, 4> k_local(const node &a, const node &b, doubl
         {  k*c*c,  k*c*s, -k*c*c, -k*c*s },
         {  k*c*s,  k*s*s, -k*c*s, -k*s*s },
         { -k*c*c, -k*c*s,  k*c*c,  k*c*s },
-        { -k*c*s, -k*s*s,  k*c*s,  k*s*s }
+        { -k*c*s, -k*s*s,  k*c*s,  k*s*s }  
     }};
     return ke;
 }
