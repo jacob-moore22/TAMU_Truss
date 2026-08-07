@@ -2,3 +2,4 @@ truss_solver
 results/
 results_*/
 docs/
+build/

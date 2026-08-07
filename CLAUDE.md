@@ -9,18 +9,27 @@ A basic 2D truss FEM solver using the direct stiffness method, with hand-rolled 
 ## Build
 
 ```
-make
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
 ```
 
-Produces the `truss_solver` binary. `make clean` removes the binary and the default `results/` output dir. There is no test suite.
+Produces `build/truss_solver`. First configure fetches GoogleTest via `FetchContent` (network required once; cached under `build/_deps` after). `rm -rf build` is the equivalent of the old `make clean`.
 
 ## Run
 
 ```
-./truss_solver [input_file] [output_dir]
+./build/truss_solver [input_file] [output_dir]
 ```
 
-Defaults: `examples/input_triangle.txt`, `results/`. Example: `./truss_solver examples/fink_truss.txt results_fink`
+Defaults: `examples/input_triangle.txt`, `results/`. Example: `./build/truss_solver examples/fink_truss.txt results_fink`
+
+## Test
+
+```
+ctest --test-dir build --output-on-failure
+```
+
+GoogleTest suite in `tests/` (`test_solver.cpp`, `test_vtk_writer.cpp`, `test_integration.cpp`) covers everything in `src/solver.cpp` and `src/vtk_writer.cpp`, plus one full-pipeline integration test against a hand-built model (independently cross-checked, not derived from this code). `src/io.cpp`/`include/io.h` (`read_input`) and `src/main.cpp` are intentionally untested — `read_input` is thin text parsing, `main` is the CLI entry point. Runs automatically on every PR via `.github/workflows/tests.yml` (also triggerable manually via `workflow_dispatch`).
 
 ## Architecture
 
@@ -33,7 +42,7 @@ Pipeline in `src/main.cpp`: `read_input` (io.cpp) → `assemble` global stiffnes
 
 ## Documentation
 
-- All public functions/structs carry Doxygen comments. `make docs` (requires `doxygen`) generates an HTML API reference into `docs/html/` per `Doxyfile`; `make clean-docs` removes it. See `PROCESS_FLOW.md` for a narrative walkthrough of state as it flows through the pipeline.
+- All public functions/structs carry Doxygen comments. `cmake --build build --target docs` (requires `doxygen`) generates an HTML API reference into `docs/html/` per `Doxyfile`; `rm -rf docs` removes it. `cmake --build build --target format` runs `clang-format` over `src/`, `include/`, and `tests/`. See `PROCESS_FLOW.md` for a narrative walkthrough of state as it flows through the pipeline.
 
 ## Notes for changes
 
