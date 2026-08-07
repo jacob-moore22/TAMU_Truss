@@ -43,6 +43,7 @@ Pipeline in `src/main.cpp`: `read_input` (io.cpp) → `assemble` global stiffnes
 ## Documentation
 
 - All public functions/structs carry Doxygen comments. `cmake --build build --target docs` (requires `doxygen`) generates an HTML API reference into `docs/html/` per `Doxyfile`; `rm -rf docs` removes it. `cmake --build build --target format` runs `clang-format` over `src/`, `include/`, and `tests/`. See `PROCESS_FLOW.md` for a narrative walkthrough of state as it flows through the pipeline.
+- `.github/workflows/docs.yml` builds and deploys the Doxygen HTML to GitHub Pages on every PR, on push to `main`, and on manual `workflow_dispatch`. It uses the official `actions/deploy-pages` flow, which serves **one site at a time** — a PR's build makes that branch's docs live at the Pages URL (satisfying "viewable before merge"), and pushing to `main` (e.g. after a merge) redeploys `main`'s docs to reclaim it. Two PRs open simultaneously will clobber each other's preview; there's no per-branch subdirectory isolation. Requires GitHub Pages enabled once via repo Settings → Pages → Source → "GitHub Actions" (a one-time manual step, not something this workflow or repo config can do on its own).
 
 ## Notes for changes
 
