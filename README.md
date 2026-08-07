@@ -1,20 +1,27 @@
 # TAMU_Truss
 
-Basic 2D truss FEM solver (direct stiffness method), code split across `src/`/`include/`. No external deps, hand-rolled Gaussian elimination. Ramps the applied loads from 0 to full value over N load steps and dumps a VTK file per step.
+Basic 2D truss FEM solver (direct stiffness method), code split across `src/`/`include/`. No external deps for the solver itself (hand-rolled Gaussian elimination); the test suite fetches GoogleTest via CMake. Ramps the applied loads from 0 to full value over N load steps and dumps a VTK file per step.
 
 ## Build
 
 ```
-make
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+```
+
+## Test
+
+```
+ctest --test-dir build --output-on-failure
 ```
 
 ## Run
 
 ```
-./truss_solver [input_file] [output_dir]
+./build/truss_solver [input_file] [output_dir]
 ```
 
-Defaults: `input.txt`, `results/`. Example: `./truss_solver examples/fink_truss.txt results_fink`
+Defaults: `examples/input_triangle.txt`, `results/`. Example: `./build/truss_solver examples/fink_truss.txt results_fink`
 
 ## Input format
 

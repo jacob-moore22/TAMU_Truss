@@ -1,0 +1,67 @@
+{
+  "include/io.h": {
+    "mtime": 1786133360.0746286,
+    "ast_hash": "342a58369ead277332ac2081f737dc05",
+    "semantic_hash": "342a58369ead277332ac2081f737dc05"
+  },
+  "include/solver.h": {
+    "mtime": 1786133360.0756617,
+    "ast_hash": "b16713047f8e4a92596f26dc07ac59a2",
+    "semantic_hash": "b16713047f8e4a92596f26dc07ac59a2"
+  },
+  "include/types.h": {
+    "mtime": 1786133360.0763223,
+    "ast_hash": "3a78addbd3d19d1acd4a7b3dbd87c459",
+    "semantic_hash": "3a78addbd3d19d1acd4a7b3dbd87c459"
+  },
+  "include/vtk_writer.h": {
+    "mtime": 1786133360.0769496,
+    "ast_hash": "f0b6eebc7df9075d185c90d442ac2828",
+    "semantic_hash": "f0b6eebc7df9075d185c90d442ac2828"
+  },
+  "src/io.cpp": {
+    "mtime": 1786133360.067402,
+    "ast_hash": "fabe6b26733c13da01625bf323e80f66",
+    "semantic_hash": "fabe6b26733c13da01625bf323e80f66"
+  },
+  "src/main.cpp": {
+    "mtime": 1786133464.2275236,
+    "ast_hash": "d784dcb5ecd68fe82e8eb82a8429a3cc",
+    "semantic_hash": "d784dcb5ecd68fe82e8eb82a8429a3cc"
+  },
+  "src/solver.cpp": {
+    "mtime": 1786133360.0726948,
+    "ast_hash": "29922b67126b7546de94207a7ebd95f9",
+    "semantic_hash": "29922b67126b7546de94207a7ebd95f9"
+  },
+  "src/vtk_writer.cpp": {
+    "mtime": 1786133360.0740526,
+    "ast_hash": "0a61705d159c7526d4d5413700ea7f97",
+    "semantic_hash": "0a61705d159c7526d4d5413700ea7f97"
+  },
+  "CLAUDE.md": {
+    "mtime": 1786133255.8611093,
+    "ast_hash": "5043f3d0c462a699d463f81e8e3702e4",
+    "semantic_hash": "5043f3d0c462a699d463f81e8e3702e4"
+  },
+  "README.md": {
+    "mtime": 1786129412.6335158,
+    "ast_hash": "261c0290ca4e410418810847a2002bc2",
+    "semantic_hash": "261c0290ca4e410418810847a2002bc2"
+  },
+  "examples/fink_truss.txt": {
+    "mtime": 1785434807.3939734,
+    "ast_hash": "7ef06f2bff370f1b0d09f7c2bbbb9adf",
+    "semantic_hash": "7ef06f2bff370f1b0d09f7c2bbbb9adf"
+  },
+  "examples/howe_truss.txt": {
+    "mtime": 1785435713.6662228,
+    "ast_hash": "b8666e045789484da50413fbd287a6ea",
+    "semantic_hash": "b8666e045789484da50413fbd287a6ea"
+  },
+  "examples/input_triangle.txt": {
+    "mtime": 1785434233.8998847,
+    "ast_hash": "56293bf397332873a92093a83a5f0201",
+    "semantic_hash": "56293bf397332873a92093a83a5f0201"
+  }
+}

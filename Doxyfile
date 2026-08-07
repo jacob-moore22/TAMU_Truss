@@ -1,0 +1,33 @@
+PROJECT_NAME           = "TAMU Truss"
+PROJECT_BRIEF           = "2D truss FEM solver (direct stiffness method)"
+OUTPUT_DIRECTORY        = docs
+
+INPUT                   = README.md PROCESS_FLOW.md include src
+FILE_PATTERNS           = *.h *.cpp
+USE_MDFILE_AS_MAINPAGE  = README.md
+RECURSIVE               = NO
+
+EXTRACT_ALL             = YES
+EXTRACT_STATIC          = YES
+
+GENERATE_HTML           = YES
+HTML_OUTPUT             = html
+GENERATE_LATEX          = NO
+GENERATE_TREEVIEW       = YES
+
+# Graphviz-based diagrams: struct collaboration graphs, header include graphs,
+# and function call/caller graphs. Requires the `dot` binary (graphviz
+# package) on PATH at doc-generation time.
+BUILTIN_STL_SUPPORT     = YES
+HAVE_DOT                = YES
+DOT_IMAGE_FORMAT        = svg
+INTERACTIVE_SVG         = YES
+COLLABORATION_GRAPH     = YES
+INCLUDE_GRAPH           = YES
+INCLUDED_BY_GRAPH       = YES
+CALL_GRAPH              = YES
+CALLER_GRAPH            = YES
+DOT_GRAPH_MAX_NODES     = 50
+
+QUIET                   = YES
+WARN_IF_UNDOCUMENTED    = YES
