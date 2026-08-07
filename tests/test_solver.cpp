@@ -120,7 +120,8 @@ TEST(Assemble, MatrixSizeMatchesDofCount) {
     matrix kg = assemble(nodes, elems);
 
     ASSERT_EQ(kg.size(), 8u);
-    for (const auto &row : kg) ASSERT_EQ(row.size(), 8u);
+    for (const auto &row : kg)
+        ASSERT_EQ(row.size(), 8u);
 }
 
 TEST(Assemble, MatrixIsSymmetric) {

@@ -7,9 +7,9 @@
  */
 #pragma once
 
+#include "types.h"
 #include <array>
 #include <vector>
-#include "types.h"
 
 /// Dense global stiffness / system matrix, indexed `matrix[row][col]`.
 using matrix = std::vector<std::vector<double>>;
@@ -75,7 +75,8 @@ std::vector<double> gauss_solve(matrix k_global, std::vector<double> f_vec);
  * \return Residual force vector; nonzero only at constrained DOFs in a
  *         correctly-solved system, giving the support reactions there.
  */
-std::vector<double> reactions(const matrix &k_global, const std::vector<double> &u_vec, const std::vector<double> &f_vec);
+std::vector<double> reactions(const matrix &k_global, const std::vector<double> &u_vec,
+                              const std::vector<double> &f_vec);
 
 /**
  * \brief Recover axial stress in each element from the solved displacement
@@ -85,4 +86,5 @@ std::vector<double> reactions(const matrix &k_global, const std::vector<double> 
  * \param u_vec Solved displacement vector.
  * \return Axial stress per element, in the same order as \p elems.
  */
-std::vector<double> elem_stress(const std::vector<node> &nodes, const std::vector<elem> &elems, const std::vector<double> &u_vec);
+std::vector<double> elem_stress(const std::vector<node> &nodes, const std::vector<elem> &elems,
+                                const std::vector<double> &u_vec);

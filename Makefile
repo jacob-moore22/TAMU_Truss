@@ -3,8 +3,9 @@ CXXFLAGS = -std=c++17 -O2 -Iinclude
 
 SRC = $(wildcard src/*.cpp)
 TARGET = truss_solver
+FMT_FILES = $(wildcard include/*.h src/*.cpp tests/*.cpp)
 
-.PHONY: test docs clean
+.PHONY: test docs format format-check clean
 
 $(TARGET): $(SRC)
 	$(CXX) $(CXXFLAGS) $(SRC) -o $(TARGET)
@@ -13,6 +14,12 @@ test:
 	cmake -S . -B build -DBUILD_TESTS=ON
 	cmake --build build -j
 	ctest --test-dir build --output-on-failure
+
+format:
+	clang-format -i $(FMT_FILES)
+
+format-check:
+	clang-format --dry-run --Werror $(FMT_FILES)
 
 docs:
 	doxygen Doxyfile

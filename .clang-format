@@ -1,0 +1,10 @@
+# Based on the existing code style: 4-space indent, attached braces,
+# reference/pointer sigil next to the variable name (`const node &a`).
+BasedOnStyle: LLVM
+Standard: c++17
+
+IndentWidth: 4
+ColumnLimit: 120
+
+PointerAlignment: Right
+ReferenceAlignment: Right

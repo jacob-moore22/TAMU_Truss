@@ -45,6 +45,17 @@ ctest --test-dir build --output-on-failure
 
 Tests run automatically on every pull request via GitHub Actions (`.github/workflows/ci.yml`).
 
+## Formatting
+
+Code is formatted with `clang-format` (config in `.clang-format`).
+
+```
+make format         # apply formatting
+make format-check   # check only, exits non-zero on violations (what CI runs)
+```
+
+Checked automatically on every pull request via the `format` job in `.github/workflows/ci.yml`.
+
 ## Documentation
 
 API docs are generated with Doxygen and published to [jacob-moore22.github.io/TAMU_Truss](https://jacob-moore22.github.io/TAMU_Truss/) on every push to `main`.

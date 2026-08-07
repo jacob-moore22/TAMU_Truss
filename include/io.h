@@ -4,8 +4,8 @@
  */
 #pragma once
 
-#include <string>
 #include "types.h"
+#include <string>
 
 /**
  * \brief Parse a truss model from a plain-text input file.

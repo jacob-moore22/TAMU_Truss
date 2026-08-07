@@ -21,7 +21,8 @@ TEST(WriteVtk, WritesExpectedHeaderStructureAndCounts) {
     ASSERT_TRUE(f.is_open());
     std::vector<std::string> lines;
     std::string line;
-    while (std::getline(f, line)) lines.push_back(line);
+    while (std::getline(f, line))
+        lines.push_back(line);
 
     ASSERT_GE(lines.size(), 5u);
     EXPECT_EQ(lines[0], "# vtk DataFile Version 3.0");

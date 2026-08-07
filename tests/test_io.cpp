@@ -33,9 +33,7 @@ TEST(ReadInput, ParsesAllSections) {
     EXPECT_EQ(m.load_steps, 1);
 }
 
-TEST(ReadInput, ThrowsOnMissingFile) {
-    EXPECT_THROW(read_input("this/path/does/not/exist.txt"), std::runtime_error);
-}
+TEST(ReadInput, ThrowsOnMissingFile) { EXPECT_THROW(read_input("this/path/does/not/exist.txt"), std::runtime_error); }
 
 TEST(ReadInput, SkipsCommentsAndBlankLinesAndHandlesSparseNodeIds) {
     // fixture declares node 3 before node 2, with blank lines and comments interleaved

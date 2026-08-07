@@ -28,13 +28,14 @@ int main(int argc, char **argv) {
     std::ostringstream name0;
     name0 << out_dir << "/results_step_" << std::setfill('0') << std::setw(width) << 0 << ".vtk";
     write_vtk(name0.str(), m.nodes, m.elems, u_zero, stress_zero);
-    //std::cout << "load step 0/" << n_steps << " (factor=0, initial conditions): wrote " << name0.str() << "\n";
+    // std::cout << "load step 0/" << n_steps << " (factor=0, initial conditions): wrote " << name0.str() << "\n";
 
     for (int step = 1; step <= n_steps; ++step) {
         double factor = (double)step / n_steps;
 
         std::vector<double> f_step(n_dof);
-        for (int i = 0; i < n_dof; ++i) f_step[i] = f_full[i] * factor;
+        for (int i = 0; i < n_dof; ++i)
+            f_step[i] = f_full[i] * factor;
 
         matrix k_step = k_orig;
         std::vector<double> f_bc = f_step;
@@ -49,7 +50,7 @@ int main(int argc, char **argv) {
         write_vtk(name.str(), m.nodes, m.elems, u_vec, stresses);
 
         // std::cout << "load step " << step << "/" << n_steps << " (factor=" << factor << "):\n";
-        //std::cout << "  displacements:\n";
+        // std::cout << "  displacements:\n";
         // for (int i = 0; i < (int)m.nodes.size(); ++i) {
         //     std::cout << "    node " << (i+1) << ": ux=" << u_vec[2*i] << " uy=" << u_vec[2*i+1] << "\n";
         // }
@@ -65,7 +66,8 @@ int main(int argc, char **argv) {
     }
 
     write_vtk(out_path, m.nodes, m.elems, u_vec, stresses);
-    std::cout << "wrote " << (n_steps + 1) << " load-step file(s) (results_step_*.vtk, incl. step 0) and final " << out_path << "\n";
+    std::cout << "wrote " << (n_steps + 1) << " load-step file(s) (results_step_*.vtk, incl. step 0) and final "
+              << out_path << "\n";
 
     return 0;
 }

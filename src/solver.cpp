@@ -11,12 +11,10 @@ std::array<std::array<double, 4>, 4> k_local(const node &a, const node &b, doubl
     double s = dy / l;
     double k = e * area / l;
 
-    std::array<std::array<double, 4>, 4> ke = {{
-        {  k*c*c,  k*c*s, -k*c*c, -k*c*s },
-        {  k*c*s,  k*s*s, -k*c*s, -k*s*s },
-        { -k*c*c, -k*c*s,  k*c*c,  k*c*s },
-        { -k*c*s, -k*s*s,  k*c*s,  k*s*s }  
-    }};
+    std::array<std::array<double, 4>, 4> ke = {{{k * c * c, k * c * s, -k * c * c, -k * c * s},
+                                                {k * c * s, k * s * s, -k * c * s, -k * s * s},
+                                                {-k * c * c, -k * c * s, k * c * c, k * c * s},
+                                                {-k * c * s, -k * s * s, k * c * s, k * s * s}}};
     return ke;
 }
 
@@ -26,7 +24,7 @@ matrix assemble(const std::vector<node> &nodes, const std::vector<elem> &elems) 
 
     for (const auto &el : elems) {
         auto ke = k_local(nodes[el.n1 - 1], nodes[el.n2 - 1], el.a, el.e);
-        int dofs[4] = { 2*(el.n1-1), 2*(el.n1-1)+1, 2*(el.n2-1), 2*(el.n2-1)+1 };
+        int dofs[4] = {2 * (el.n1 - 1), 2 * (el.n1 - 1) + 1, 2 * (el.n2 - 1), 2 * (el.n2 - 1) + 1};
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {
                 k_global[dofs[i]][dofs[j]] += ke[i][j];
@@ -39,7 +37,7 @@ matrix assemble(const std::vector<node> &nodes, const std::vector<elem> &elems) 
 std::vector<double> build_f(const std::vector<force> &forces, int n_dof) {
     std::vector<double> f_vec(n_dof, 0.0);
     for (const auto &fr : forces) {
-        int dof = 2*(fr.node-1) + (fr.dof-1);
+        int dof = 2 * (fr.node - 1) + (fr.dof - 1);
         f_vec[dof] += fr.val;
     }
     return f_vec;
@@ -48,7 +46,7 @@ std::vector<double> build_f(const std::vector<force> &forces, int n_dof) {
 void apply_bc(matrix &k_global, std::vector<double> &f_vec, const std::vector<bc> &bcs) {
     int n_dof = (int)f_vec.size();
     for (const auto &b : bcs) {
-        int dof = 2*(b.node-1) + (b.dof-1);
+        int dof = 2 * (b.node - 1) + (b.dof - 1);
         for (int i = 0; i < n_dof; ++i) {
             f_vec[i] -= k_global[i][dof] * b.val;
         }
@@ -101,7 +99,8 @@ std::vector<double> gauss_solve(matrix k_global, std::vector<double> f_vec) {
     return u_vec;
 }
 
-std::vector<double> reactions(const matrix &k_global, const std::vector<double> &u_vec, const std::vector<double> &f_vec) {
+std::vector<double> reactions(const matrix &k_global, const std::vector<double> &u_vec,
+                              const std::vector<double> &f_vec) {
     int n = (int)u_vec.size();
     std::vector<double> r_vec(n, 0.0);
     for (int i = 0; i < n; ++i) {
@@ -114,7 +113,8 @@ std::vector<double> reactions(const matrix &k_global, const std::vector<double> 
     return r_vec;
 }
 
-std::vector<double> elem_stress(const std::vector<node> &nodes, const std::vector<elem> &elems, const std::vector<double> &u_vec) {
+std::vector<double> elem_stress(const std::vector<node> &nodes, const std::vector<elem> &elems,
+                                const std::vector<double> &u_vec) {
     std::vector<double> stresses;
     stresses.reserve(elems.size());
 
@@ -127,10 +127,10 @@ std::vector<double> elem_stress(const std::vector<node> &nodes, const std::vecto
         double c = dx / l;
         double s = dy / l;
 
-        int dofs[4] = { 2*(el.n1-1), 2*(el.n1-1)+1, 2*(el.n2-1), 2*(el.n2-1)+1 };
-        double ue[4] = { u_vec[dofs[0]], u_vec[dofs[1]], u_vec[dofs[2]], u_vec[dofs[3]] };
+        int dofs[4] = {2 * (el.n1 - 1), 2 * (el.n1 - 1) + 1, 2 * (el.n2 - 1), 2 * (el.n2 - 1) + 1};
+        double ue[4] = {u_vec[dofs[0]], u_vec[dofs[1]], u_vec[dofs[2]], u_vec[dofs[3]]};
 
-        double strain = (-c*ue[0] - s*ue[1] + c*ue[2] + s*ue[3]) / l;
+        double strain = (-c * ue[0] - s * ue[1] + c * ue[2] + s * ue[3]) / l;
         stresses.push_back(el.e * strain);
     }
     return stresses;

@@ -4,11 +4,8 @@
 #include <fstream>
 #include <stdexcept>
 
-void write_vtk(const std::string &path,
-               const std::vector<node> &nodes,
-               const std::vector<elem> &elems,
-               const std::vector<double> &u_vec,
-               const std::vector<double> &stresses) {
+void write_vtk(const std::string &path, const std::vector<node> &nodes, const std::vector<elem> &elems,
+               const std::vector<double> &u_vec, const std::vector<double> &stresses) {
     std::filesystem::path p(path);
     if (p.has_parent_path()) {
         std::filesystem::create_directories(p.parent_path());
@@ -45,7 +42,7 @@ void write_vtk(const std::string &path,
     f << "POINT_DATA " << n_nodes << "\n";
     f << "VECTORS Displacement float\n";
     for (int i = 0; i < n_nodes; ++i) {
-        f << u_vec[2*i] << " " << u_vec[2*i+1] << " 0.0\n";
+        f << u_vec[2 * i] << " " << u_vec[2 * i + 1] << " 0.0\n";
     }
 
     f << "CELL_DATA " << n_elems << "\n";

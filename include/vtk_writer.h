@@ -4,9 +4,9 @@
  */
 #pragma once
 
+#include "types.h"
 #include <string>
 #include <vector>
-#include "types.h"
 
 /**
  * \brief Write nodal displacements and per-element axial stress to a legacy
@@ -24,8 +24,5 @@
  * \param stresses Per-element axial stress (same order as \p elems).
  * \throws std::runtime_error if the output file cannot be opened.
  */
-void write_vtk(const std::string &path,
-               const std::vector<node> &nodes,
-               const std::vector<elem> &elems,
-               const std::vector<double> &u_vec,
-               const std::vector<double> &stresses);
+void write_vtk(const std::string &path, const std::vector<node> &nodes, const std::vector<elem> &elems,
+               const std::vector<double> &u_vec, const std::vector<double> &stresses);
