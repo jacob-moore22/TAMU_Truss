@@ -4,36 +4,36 @@
 #include <stdexcept>
 
 std::array<std::array<double, 4>, 4> k_local(const node &a, const node &b, double area, double e) {
-    double dx = b.x - a.x;
-    double dy = b.y - a.y;
-    double l = std::sqrt(dx * dx + dy * dy);
-    double c = dx / l;
-    double s = dy / l;
-    double k = e * area / l;
+double dx = b.x - a.x;
+double dy = b.y - a.y;
+double l = std::sqrt(dx * dx + dy * dy);
+double c = dx / l;
+double s = dy / l;
+double k = e * area / l;
 
-    std::array<std::array<double, 4>, 4> ke = {{
-        {  k*c*c,  k*c*s, -k*c*c, -k*c*s },
-        {  k*c*s,  k*s*s, -k*c*s, -k*s*s },
-        { -k*c*c, -k*c*s,  k*c*c,  k*c*s },
-        { -k*c*s, -k*s*s,  k*c*s,  k*s*s }
-    }};
-    return ke;
+std::array<std::array<double, 4>, 4> ke = {{
+    {  k*c*c,  k*c*s, -k*c*c, -k*c*s },
+    {  k*c*s,  k*s*s, -k*c*s, -k*s*s },
+    { -k*c*c, -k*c*s,  k*c*c,  k*c*s },
+    { -k*c*s, -k*s*s,  k*c*s,  k*s*s }
+}};
+return ke;
 }
 
 matrix assemble(const std::vector<node> &nodes, const std::vector<elem> &elems) {
     int n_dof = 2 * (int)nodes.size();
     matrix k_global(n_dof, std::vector<double>(n_dof, 0.0));
 
-    for (const auto &el : elems) {
-        auto ke = k_local(nodes[el.n1 - 1], nodes[el.n2 - 1], el.a, el.e);
-        int dofs[4] = { 2*(el.n1-1), 2*(el.n1-1)+1, 2*(el.n2-1), 2*(el.n2-1)+1 };
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                k_global[dofs[i]][dofs[j]] += ke[i][j];
-            }
+for (const auto &el : elems) {
+    auto ke = k_local(nodes[el.n1 - 1], nodes[el.n2 - 1], el.a, el.e);
+    int dofs[4] = { 2*(el.n1-1), 2*(el.n1-1)+1, 2*(el.n2-1), 2*(el.n2-1)+1 };
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            k_global[dofs[i]][dofs[j]] += ke[i][j];
         }
     }
-    return k_global;
+}
+return k_global;
 }
 
 std::vector<double> build_f(const std::vector<force> &forces, int n_dof) {

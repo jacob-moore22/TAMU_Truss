@@ -3,28 +3,33 @@
 #include <vector>
 
 struct node {
-    double x, y;
+double x;
+double y;
 };
 
 struct elem {
-    int n1, n2;
-    double a, e;
+int n1;
+int n2;
+double a;
+double e;
 };
 
 struct bc {
-    int node, dof;
-    double val;
+int node;
+int dof;
+double val;
 };
 
 struct force {
-    int node, dof;
-    double val;
+int node;
+int dof;
+double val;
 };
 
 struct model {
-    std::vector<node> nodes;
-    std::vector<elem> elems;
-    std::vector<bc> bcs;
-    std::vector<force> forces;
-    int load_steps = 1;
+std::vector<node> nodes;
+std::vector<elem> elems;
+std::vector<bc> bcs;
+std::vector<force> forces;
+int load_steps = 1;
 };
