@@ -3,145 +3,216 @@
 #include <cmath>
 #include <stdexcept>
 
-std::array<std::array<double, 4>, 4> k_local(const node& a, const node& b,
-                                             double area, double e) {
-    double dx = b.x - a.x;
-    double dy = b.y - a.y;
-    double l = std::sqrt(dx * dx + dy * dy);
-    double c = dx / l;
-    double s = dy / l;
-    double k = e * area / l;
+/**
+ * @brief Compute the 4x4 local stiffness matrix for a single 2D truss element.
+ *
+ * @param node_a First endpoint of the element.
+ * @param node_b Second endpoint of the element.
+ * @param cross_section_area Cross-sectional area of the element.
+ * @param youngs_modulus Young's modulus of the element material.
+ * @return The local stiffness matrix in global (x, y) coordinates, ordered
+ *         [node_a.x, node_a.y, node_b.x, node_b.y].
+ */
+std::array<std::array<double, 4>, 4> k_local(const node& node_a, const node& node_b,
+                                             double cross_section_area, double youngs_modulus) {
+    double delta_x = node_b.x - node_a.x;
+    double delta_y = node_b.y - node_a.y;
+    double length = std::sqrt(delta_x * delta_x + delta_y * delta_y);
+    double cos_theta = delta_x / length;
+    double sin_theta = delta_y / length;
+    double axial_stiffness = youngs_modulus * cross_section_area / length;
 
-    std::array<std::array<double, 4>, 4> ke = {
-        {{k * c * c, k * c * s, -k * c * c, -k * c * s},
-         {k * c * s, k * s * s, -k * c * s, -k * s * s},
-         {-k * c * c, -k * c * s, k * c * c, k * c * s},
-         {-k * c * s, -k * s * s, k * c * s, k * s * s}}};
-    return ke;
+    std::array<std::array<double, 4>, 4> local_stiffness = {
+        {{axial_stiffness * cos_theta * cos_theta, axial_stiffness * cos_theta * sin_theta,
+          -axial_stiffness * cos_theta * cos_theta, -axial_stiffness * cos_theta * sin_theta},
+         {axial_stiffness * cos_theta * sin_theta, axial_stiffness * sin_theta * sin_theta,
+          -axial_stiffness * cos_theta * sin_theta, -axial_stiffness * sin_theta * sin_theta},
+         {-axial_stiffness * cos_theta * cos_theta, -axial_stiffness * cos_theta * sin_theta,
+          axial_stiffness * cos_theta * cos_theta, axial_stiffness * cos_theta * sin_theta},
+         {-axial_stiffness * cos_theta * sin_theta, -axial_stiffness * sin_theta * sin_theta,
+          axial_stiffness * cos_theta * sin_theta, axial_stiffness * sin_theta * sin_theta}}};
+    return local_stiffness;
 }
 
-matrix assemble(const std::vector<node>& nodes,
-                const std::vector<elem>& elems) {
-    int n_dof = 2 * (int)nodes.size();
-    matrix k_global(n_dof, std::vector<double>(n_dof, 0.0));
+/**
+ * @brief Assemble the global stiffness matrix from all elements.
+ *
+ * @param nodes All node positions in the model.
+ * @param elements All truss elements in the model.
+ * @return The assembled global stiffness matrix, sized 2*nodes.size() square.
+ */
+matrix assemble(const std::vector<node>& nodes, const std::vector<elem>& elements) {
+    int dof_count = 2 * (int)nodes.size();
+    matrix global_stiffness(dof_count, std::vector<double>(dof_count, 0.0));
 
-    for (const auto& el : elems) {
-        auto ke = k_local(nodes[el.n1 - 1], nodes[el.n2 - 1], el.a, el.e);
-        int dofs[4] = {2 * (el.n1 - 1), 2 * (el.n1 - 1) + 1, 2 * (el.n2 - 1),
-                       2 * (el.n2 - 1) + 1};
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                k_global[dofs[i]][dofs[j]] += ke[i][j];
+    for (const auto& element : elements) {
+        auto local_stiffness = k_local(nodes[element.node1_id - 1], nodes[element.node2_id - 1],
+                                       element.cross_section_area, element.youngs_modulus);
+        int dof_indices[4] = {2 * (element.node1_id - 1), 2 * (element.node1_id - 1) + 1,
+                              2 * (element.node2_id - 1), 2 * (element.node2_id - 1) + 1};
+        for (int local_row = 0; local_row < 4; ++local_row) {
+            for (int local_col = 0; local_col < 4; ++local_col) {
+                global_stiffness[dof_indices[local_row]][dof_indices[local_col]] +=
+                    local_stiffness[local_row][local_col];
             }
         }
     }
-    return k_global;
+    return global_stiffness;
 }
 
-std::vector<double> build_f(const std::vector<force>& forces, int n_dof) {
-    std::vector<double> f_vec(n_dof, 0.0);
-    for (const auto& fr : forces) {
-        int dof = 2 * (fr.node - 1) + (fr.dof - 1);
-        f_vec[dof] += fr.val;
+/**
+ * @brief Build the global applied-force vector from a list of point forces.
+ *
+ * @param forces Applied forces to scatter into the vector.
+ * @param dof_count Total number of degrees of freedom (2 * node count).
+ * @return A force vector of length dof_count.
+ */
+std::vector<double> build_f(const std::vector<force>& forces, int dof_count) {
+    std::vector<double> global_force(dof_count, 0.0);
+    for (const auto& applied_force : forces) {
+        int dof_index = 2 * (applied_force.node_id - 1) + (applied_force.dof_index - 1);
+        global_force[dof_index] += applied_force.value;
     }
-    return f_vec;
+    return global_force;
 }
 
-void apply_bc(matrix& k_global, std::vector<double>& f_vec,
-              const std::vector<bc>& bcs) {
-    int n_dof = (int)f_vec.size();
-    for (const auto& b : bcs) {
-        int dof = 2 * (b.node - 1) + (b.dof - 1);
-        for (int i = 0; i < n_dof; ++i) {
-            f_vec[i] -= k_global[i][dof] * b.val;
+/**
+ * @brief Apply displacement boundary conditions to a stiffness matrix and force
+ * vector.
+ *
+ * Eliminates each constrained degree of freedom by zeroing its row and column
+ * in @p stiffness_matrix, setting the diagonal to 1, and correcting
+ * @p force_vector so the system still solves to the prescribed value at that
+ * DOF.
+ *
+ * @param[in,out] stiffness_matrix Global stiffness matrix, modified in place.
+ * @param[in,out] force_vector Global force vector, modified in place.
+ * @param boundary_conditions Prescribed displacement boundary conditions to
+ * apply.
+ */
+void apply_bc(matrix& stiffness_matrix, std::vector<double>& force_vector,
+              const std::vector<bc>& boundary_conditions) {
+    int dof_count = (int)force_vector.size();
+    for (const auto& boundary_condition : boundary_conditions) {
+        int dof_index = 2 * (boundary_condition.node_id - 1) + (boundary_condition.dof_index - 1);
+        for (int row = 0; row < dof_count; ++row) {
+            force_vector[row] -= stiffness_matrix[row][dof_index] * boundary_condition.value;
         }
-        for (int i = 0; i < n_dof; ++i) {
-            k_global[dof][i] = 0.0;
-            k_global[i][dof] = 0.0;
+        for (int row = 0; row < dof_count; ++row) {
+            stiffness_matrix[dof_index][row] = 0.0;
+            stiffness_matrix[row][dof_index] = 0.0;
         }
-        k_global[dof][dof] = 1.0;
-        f_vec[dof] = b.val;
+        stiffness_matrix[dof_index][dof_index] = 1.0;
+        force_vector[dof_index] = boundary_condition.value;
     }
 }
 
-std::vector<double> gauss_solve(matrix k_global, std::vector<double> f_vec) {
-    int n = (int)f_vec.size();
+/**
+ * @brief Solve a linear system via Gaussian elimination with partial pivoting.
+ *
+ * @param stiffness_matrix Global stiffness matrix, with boundary conditions
+ * applied.
+ * @param force_vector Global force vector, with boundary conditions applied.
+ * @return The solved displacement vector.
+ * @throws std::runtime_error if the matrix is singular (within 1e-12
+ * tolerance).
+ */
+std::vector<double> gauss_solve(matrix stiffness_matrix, std::vector<double> force_vector) {
+    int dof_count = (int)force_vector.size();
 
-    for (int p = 0; p < n; ++p) {
-        int max_row = p;
-        double max_val = std::fabs(k_global[p][p]);
-        for (int i = p + 1; i < n; ++i) {
-            if (std::fabs(k_global[i][p]) > max_val) {
-                max_val = std::fabs(k_global[i][p]);
-                max_row = i;
+    for (int pivot_row = 0; pivot_row < dof_count; ++pivot_row) {
+        int max_row = pivot_row;
+        double max_val = std::fabs(stiffness_matrix[pivot_row][pivot_row]);
+        for (int row = pivot_row + 1; row < dof_count; ++row) {
+            if (std::fabs(stiffness_matrix[row][pivot_row]) > max_val) {
+                max_val = std::fabs(stiffness_matrix[row][pivot_row]);
+                max_row = row;
             }
         }
-        if (max_row != p) {
-            std::swap(k_global[p], k_global[max_row]);
-            std::swap(f_vec[p], f_vec[max_row]);
+        if (max_row != pivot_row) {
+            std::swap(stiffness_matrix[pivot_row], stiffness_matrix[max_row]);
+            std::swap(force_vector[pivot_row], force_vector[max_row]);
         }
-        if (std::fabs(k_global[p][p]) < 1e-12) {
-            throw std::runtime_error(
-                "singular stiffness matrix - check boundary conditions");
+        if (std::fabs(stiffness_matrix[pivot_row][pivot_row]) < 1e-12) {
+            throw std::runtime_error("singular stiffness matrix - check boundary conditions");
         }
 
-        for (int i = p + 1; i < n; ++i) {
-            double factor = k_global[i][p] / k_global[p][p];
-            for (int j = p; j < n; ++j) {
-                k_global[i][j] -= factor * k_global[p][j];
+        for (int row = pivot_row + 1; row < dof_count; ++row) {
+            double elimination_factor =
+                stiffness_matrix[row][pivot_row] / stiffness_matrix[pivot_row][pivot_row];
+            for (int col = pivot_row; col < dof_count; ++col) {
+                stiffness_matrix[row][col] -= elimination_factor * stiffness_matrix[pivot_row][col];
             }
-            f_vec[i] -= factor * f_vec[p];
+            force_vector[row] -= elimination_factor * force_vector[pivot_row];
         }
     }
 
-    std::vector<double> u_vec(n, 0.0);
-    for (int i = n - 1; i >= 0; --i) {
-        double sum = f_vec[i];
-        for (int j = i + 1; j < n; ++j) {
-            sum -= k_global[i][j] * u_vec[j];
+    std::vector<double> displacements(dof_count, 0.0);
+    for (int row = dof_count - 1; row >= 0; --row) {
+        double residual = force_vector[row];
+        for (int col = row + 1; col < dof_count; ++col) {
+            residual -= stiffness_matrix[row][col] * displacements[col];
         }
-        u_vec[i] = sum / k_global[i][i];
+        displacements[row] = residual / stiffness_matrix[row][row];
     }
-    return u_vec;
+    return displacements;
 }
 
-std::vector<double> reactions(const matrix& k_global,
-                              const std::vector<double>& u_vec,
-                              const std::vector<double>& f_vec) {
-    int n = (int)u_vec.size();
-    std::vector<double> r_vec(n, 0.0);
-    for (int i = 0; i < n; ++i) {
-        double sum = 0.0;
-        for (int j = 0; j < n; ++j) {
-            sum += k_global[i][j] * u_vec[j];
+/**
+ * @brief Compute reaction forces at every degree of freedom.
+ *
+ * @param stiffness_matrix The original (pre-boundary-condition) global
+ * stiffness matrix.
+ * @param displacements Solved displacement vector.
+ * @param applied_forces Applied force vector, before boundary conditions were
+ * applied.
+ * @return Reaction force at every degree of freedom (K * u - f).
+ */
+std::vector<double> reactions(const matrix& stiffness_matrix, const std::vector<double>& displacements,
+                              const std::vector<double>& applied_forces) {
+    int dof_count = (int)displacements.size();
+    std::vector<double> reaction_forces(dof_count, 0.0);
+    for (int row = 0; row < dof_count; ++row) {
+        double stiffness_times_displacement = 0.0;
+        for (int col = 0; col < dof_count; ++col) {
+            stiffness_times_displacement += stiffness_matrix[row][col] * displacements[col];
         }
-        r_vec[i] = sum - f_vec[i];
+        reaction_forces[row] = stiffness_times_displacement - applied_forces[row];
     }
-    return r_vec;
+    return reaction_forces;
 }
 
-std::vector<double> elem_stress(const std::vector<node>& nodes,
-                                const std::vector<elem>& elems,
-                                const std::vector<double>& u_vec) {
+/**
+ * @brief Compute axial stress in every truss element from nodal displacements.
+ *
+ * @param nodes All node positions in the model.
+ * @param elements All truss elements in the model.
+ * @param displacements Solved displacement vector.
+ * @return Axial stress for each element, in the same order as @p elements.
+ */
+std::vector<double> elem_stress(const std::vector<node>& nodes, const std::vector<elem>& elements,
+                                const std::vector<double>& displacements) {
     std::vector<double> stresses;
-    stresses.reserve(elems.size());
+    stresses.reserve(elements.size());
 
-    for (const auto& el : elems) {
-        const node& a = nodes[el.n1 - 1];
-        const node& b = nodes[el.n2 - 1];
-        double dx = b.x - a.x;
-        double dy = b.y - a.y;
-        double l = std::sqrt(dx * dx + dy * dy);
-        double c = dx / l;
-        double s = dy / l;
+    for (const auto& element : elements) {
+        const node& node_a = nodes[element.node1_id - 1];
+        const node& node_b = nodes[element.node2_id - 1];
+        double delta_x = node_b.x - node_a.x;
+        double delta_y = node_b.y - node_a.y;
+        double length = std::sqrt(delta_x * delta_x + delta_y * delta_y);
+        double cos_theta = delta_x / length;
+        double sin_theta = delta_y / length;
 
-        int dofs[4] = {2 * (el.n1 - 1), 2 * (el.n1 - 1) + 1, 2 * (el.n2 - 1),
-                       2 * (el.n2 - 1) + 1};
-        double ue[4] = {u_vec[dofs[0]], u_vec[dofs[1]], u_vec[dofs[2]],
-                        u_vec[dofs[3]]};
+        int dof_indices[4] = {2 * (element.node1_id - 1), 2 * (element.node1_id - 1) + 1,
+                              2 * (element.node2_id - 1), 2 * (element.node2_id - 1) + 1};
+        double element_displacements[4] = {displacements[dof_indices[0]], displacements[dof_indices[1]],
+                                           displacements[dof_indices[2]], displacements[dof_indices[3]]};
 
-        double strain = (-c * ue[0] - s * ue[1] + c * ue[2] + s * ue[3]) / l;
-        stresses.push_back(el.e * strain);
+        double strain = (-cos_theta * element_displacements[0] - sin_theta * element_displacements[1] +
+                         cos_theta * element_displacements[2] + sin_theta * element_displacements[3]) /
+                        length;
+        stresses.push_back(element.youngs_modulus * strain);
     }
     return stresses;
 }

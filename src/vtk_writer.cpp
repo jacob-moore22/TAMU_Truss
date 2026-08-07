@@ -4,52 +4,68 @@
 #include <fstream>
 #include <stdexcept>
 
-void write_vtk(const std::string& path, const std::vector<node>& nodes,
-               const std::vector<elem>& elems, const std::vector<double>& u_vec,
+/**
+ * @brief Write a legacy ASCII VTK unstructured grid file for one solution
+ * state.
+ *
+ * Writes node geometry, element connectivity (as VTK line cells), nodal
+ * displacements (as a point vector field), and per-element axial stress
+ * (as a cell scalar field). Parent directories are created as needed.
+ *
+ * @param output_path Destination file path.
+ * @param nodes Node positions.
+ * @param elements Truss elements (connectivity).
+ * @param displacements Nodal displacement vector, length 2*nodes.size().
+ * @param stresses Per-element axial stress, in the same order as @p elements.
+ * @throws std::runtime_error if the output file cannot be opened.
+ */
+void write_vtk(const std::string& output_path, const std::vector<node>& nodes,
+               const std::vector<elem>& elements, const std::vector<double>& displacements,
                const std::vector<double>& stresses) {
-    std::filesystem::path p(path);
-    if (p.has_parent_path()) {
-        std::filesystem::create_directories(p.parent_path());
+    std::filesystem::path output_fs_path(output_path);
+    if (output_fs_path.has_parent_path()) {
+        std::filesystem::create_directories(output_fs_path.parent_path());
     }
 
-    std::ofstream f(path);
-    if (!f.is_open()) {
-        throw std::runtime_error("could not open output file: " + path);
+    std::ofstream output_file(output_path);
+    if (!output_file.is_open()) {
+        throw std::runtime_error("could not open output file: " + output_path);
     }
 
-    int n_nodes = (int)nodes.size();
-    int n_elems = (int)elems.size();
+    int node_count = (int)nodes.size();
+    int element_count = (int)elements.size();
 
-    f << "# vtk DataFile Version 3.0\n";
-    f << "truss solver output\n";
-    f << "ASCII\n";
-    f << "DATASET UNSTRUCTURED_GRID\n";
+    output_file << "# vtk DataFile Version 3.0\n";
+    output_file << "truss solver output\n";
+    output_file << "ASCII\n";
+    output_file << "DATASET UNSTRUCTURED_GRID\n";
 
-    f << "POINTS " << n_nodes << " float\n";
-    for (const auto& n : nodes) {
-        f << n.x << " " << n.y << " 0.0\n";
+    output_file << "POINTS " << node_count << " float\n";
+    for (const auto& node_position : nodes) {
+        output_file << node_position.x << " " << node_position.y << " 0.0\n";
     }
 
-    f << "CELLS " << n_elems << " " << 3 * n_elems << "\n";
-    for (const auto& el : elems) {
-        f << "2 " << (el.n1 - 1) << " " << (el.n2 - 1) << "\n";
+    output_file << "CELLS " << element_count << " " << 3 * element_count << "\n";
+    for (const auto& element : elements) {
+        output_file << "2 " << (element.node1_id - 1) << " " << (element.node2_id - 1) << "\n";
     }
 
-    f << "CELL_TYPES " << n_elems << "\n";
-    for (int i = 0; i < n_elems; ++i) {
-        f << "3\n";
+    output_file << "CELL_TYPES " << element_count << "\n";
+    for (int i = 0; i < element_count; ++i) {
+        output_file << "3\n";
     }
 
-    f << "POINT_DATA " << n_nodes << "\n";
-    f << "VECTORS Displacement float\n";
-    for (int i = 0; i < n_nodes; ++i) {
-        f << u_vec[2 * i] << " " << u_vec[2 * i + 1] << " 0.0\n";
+    output_file << "POINT_DATA " << node_count << "\n";
+    output_file << "VECTORS Displacement float\n";
+    for (int node_index = 0; node_index < node_count; ++node_index) {
+        output_file << displacements[2 * node_index] << " " << displacements[2 * node_index + 1]
+                    << " 0.0\n";
     }
 
-    f << "CELL_DATA " << n_elems << "\n";
-    f << "SCALARS Axial_Stress float 1\n";
-    f << "LOOKUP_TABLE default\n";
-    for (double s : stresses) {
-        f << s << "\n";
+    output_file << "CELL_DATA " << element_count << "\n";
+    output_file << "SCALARS Axial_Stress float 1\n";
+    output_file << "LOOKUP_TABLE default\n";
+    for (double stress_value : stresses) {
+        output_file << stress_value << "\n";
     }
 }

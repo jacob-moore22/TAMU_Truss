@@ -11,8 +11,14 @@ $(TARGET): $(SRC)
 format:
 	clang-format -i $(SRC) $(HDR)
 
+docs:
+	doxygen Doxyfile
+
 clean:
 	rm -f $(TARGET)
 	rm -rf results
 
-.PHONY: format clean
+clean-docs:
+	rm -rf docs
+
+.PHONY: format docs clean clean-docs
