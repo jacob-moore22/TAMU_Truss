@@ -1,20 +1,50 @@
 # TAMU_Truss
 
+[![CI](https://github.com/jacob-moore22/TAMU_Truss/actions/workflows/ci.yml/badge.svg)](https://github.com/jacob-moore22/TAMU_Truss/actions/workflows/ci.yml)
+
 Basic 2D truss FEM solver (direct stiffness method), code split across `src/`/`include/`. No external deps, hand-rolled Gaussian elimination. Ramps the applied loads from 0 to full value over N load steps and dumps a VTK file per step.
 
 ## Build
 
 ```
-make
+cmake -B build
+cmake --build build
 ```
+
+Produces `build/truss_solver`. Release (`-O2`) is the default build type.
 
 ## Run
 
 ```
-./truss_solver [input_file] [output_dir]
+./build/truss_solver [input_file] [output_dir]
 ```
 
-Defaults: `input.txt`, `results/`. Example: `./truss_solver examples/fink_truss.txt results_fink`
+Defaults: `examples/input_triangle.txt`, `results/`. Example: `./build/truss_solver examples/fink_truss.txt results_fink`
+
+## Tests
+
+Unit tests use [GoogleTest](https://github.com/google/googletest), fetched by CMake only when `TRUSS_BUILD_TESTS` is on (needs network on first configure):
+
+```
+cmake -B build-test -DTRUSS_BUILD_TESTS=ON
+cmake --build build-test
+ctest --test-dir build-test --output-on-failure
+```
+
+Tests live in `tests/`, one file per component (`test_solver.cpp`, `test_io.cpp`, `test_vtk_writer.cpp`, `test_driver.cpp`, `test_types.cpp`).
+
+## Documentation
+
+The latest documentation for `main` is published at <https://jacob-moore22.github.io/TAMU_Truss/>.
+
+To build it locally, you need [Doxygen](https://www.doxygen.nl/) (plus Graphviz `dot` for call graphs, if installed):
+
+```
+cmake -B build -DTRUSS_BUILD_DOCS=ON
+cmake --build build --target docs
+```
+
+Open `build/docs/html/index.html` in a browser. With the option on, a normal `cmake --build build` also regenerates the docs.
 
 ## Input format
 
