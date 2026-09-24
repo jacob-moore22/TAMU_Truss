@@ -1,3 +1,7 @@
+/**
+ * @file driver.cpp
+ * @brief Implementation of the load-stepping driver (see driver.h).
+ */
 #include "driver.h"
 
 #include <algorithm>
@@ -8,48 +12,81 @@
 #include "solver.h"
 #include "vtk_writer.h"
 
-void run_solver(const model& m, const std::string& out_dir) {
-    std::string out_path = out_dir + "/results.vtk";
-    int n_dof = 2 * (int)m.nodes.size();
+namespace {
 
-    matrix k_orig = assemble(m.nodes, m.elems);
-    std::vector<double> f_full = build_f(m.forces, n_dof);
+/**
+ * @brief Builds the file name for one load step.
+ *
+ * @param output_dir Directory the file goes in.
+ * @param step       Load-step number.
+ * @param num_digits Zero-padding width, so files sort correctly.
+ * @return `<output_dir>/results_step_NN.vtk`
+ */
+std::string step_filename(const std::string& output_dir, int step,
+                          int num_digits) {
+    std::ostringstream name;
+    name << output_dir << "/results_step_" << std::setfill('0')
+         << std::setw(num_digits) << step << ".vtk";
+    return name.str();
+}
 
-    int n_steps = m.load_steps > 0 ? m.load_steps : 1;
-    int width = std::max((int)std::to_string(n_steps).size(), 2);
+}  // namespace
 
-    std::vector<double> u_vec, r_vec, stresses;
+void run_solver(const model& truss, const std::string& output_dir) {
+    std::string final_path = output_dir + "/results.vtk";
+    int num_dofs = 2 * (int)truss.nodes.size();
 
-    std::vector<double> u_zero(n_dof, 0.0);
-    std::vector<double> stress_zero(m.elems.size(), 0.0);
-    std::ostringstream name0;
-    name0 << out_dir << "/results_step_" << std::setfill('0')
-          << std::setw(width) << 0 << ".vtk";
-    write_vtk(name0.str(), m.nodes, m.elems, u_zero, stress_zero);
+    // Stiffness and loads are independent of the load step, so build them
+    // once. k_global is kept unmodified for the reaction calculation.
+    matrix k_global = assemble_global_stiffness(truss.nodes, truss.elements);
+    std::vector<double> full_load_vector =
+        build_load_vector(truss.loads, num_dofs);
 
-    for (int step = 1; step <= n_steps; ++step) {
-        double factor = (double)step / n_steps;
+    // Loads are ramped from 0 to full value over this many steps.
+    int num_steps = truss.num_load_steps > 0 ? truss.num_load_steps : 1;
+    // Zero-padding width for the step number in file names (at least 2).
+    int num_digits = std::max((int)std::to_string(num_steps).size(), 2);
 
-        std::vector<double> f_step(n_dof);
-        for (int i = 0; i < n_dof; ++i) f_step[i] = f_full[i] * factor;
+    // Results of the most recent step; reused for the final results.vtk.
+    std::vector<double> displacements;    // {u}, 2 per node
+    std::vector<double> reaction_forces;  // {R}, 2 per node
+    std::vector<double> stresses;         // 1 per element
 
-        matrix k_step = k_orig;
-        std::vector<double> f_bc = f_step;
-        apply_bc(k_step, f_bc, m.bcs);
-        u_vec = gauss_solve(k_step, f_bc);
+    // Step 0: the undeformed truss with no load.
+    std::vector<double> zero_displacements(num_dofs, 0.0);
+    std::vector<double> zero_stresses(truss.elements.size(), 0.0);
+    write_vtk(step_filename(output_dir, 0, num_digits), truss.nodes,
+              truss.elements, zero_displacements, zero_stresses);
 
-        r_vec = reactions(k_orig, u_vec, f_step);
-        stresses = elem_stress(m.nodes, m.elems, u_vec);
+    for (int step = 1; step <= num_steps; ++step) {
+        // Fraction of the full load applied in this step (1.0 at the end).
+        double load_factor = (double)step / num_steps;
 
-        std::ostringstream name;
-        name << out_dir << "/results_step_" << std::setfill('0')
-             << std::setw(width) << step << ".vtk";
-        write_vtk(name.str(), m.nodes, m.elems, u_vec, stresses);
+        std::vector<double> step_load_vector(num_dofs);
+        for (int i = 0; i < num_dofs; ++i) {
+            step_load_vector[i] = full_load_vector[i] * load_factor;
+        }
+
+        // apply_boundary_conditions modifies its arguments, so work on
+        // copies and keep the originals for the reactions.
+        matrix k_constrained = k_global;
+        std::vector<double> constrained_load_vector = step_load_vector;
+        apply_boundary_conditions(k_constrained, constrained_load_vector,
+                                  truss.supports);
+        displacements = gauss_solve(k_constrained, constrained_load_vector);
+
+        reaction_forces =
+            compute_reactions(k_global, displacements, step_load_vector);
+        stresses = compute_element_stresses(truss.nodes, truss.elements,
+                                            displacements);
+
+        write_vtk(step_filename(output_dir, step, num_digits), truss.nodes,
+                  truss.elements, displacements, stresses);
     }
 
-    write_vtk(out_path, m.nodes, m.elems, u_vec, stresses);
+    write_vtk(final_path, truss.nodes, truss.elements, displacements, stresses);
     std::cout
-        << "wrote " << (n_steps + 1)
+        << "wrote " << (num_steps + 1)
         << " load-step file(s) (results_step_*.vtk, incl. step 0) and final "
-        << out_path << "\n";
+        << final_path << "\n";
 }

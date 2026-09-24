@@ -21,36 +21,36 @@ TEST(ReadInput, TriangleExample) {
     EXPECT_DOUBLE_EQ(m.nodes[2].x, 5.0);
     EXPECT_DOUBLE_EQ(m.nodes[2].y, 10.0);
 
-    ASSERT_EQ(m.elems.size(), 3u);
-    EXPECT_EQ(m.elems[0].n1, 1);
-    EXPECT_EQ(m.elems[0].n2, 2);
-    EXPECT_EQ(m.elems[1].n1, 2);
-    EXPECT_EQ(m.elems[1].n2, 3);
-    EXPECT_EQ(m.elems[2].n1, 1);
-    EXPECT_EQ(m.elems[2].n2, 3);
-    for (const auto& e : m.elems) {
-        EXPECT_DOUBLE_EQ(e.a, 1.5);
-        EXPECT_DOUBLE_EQ(e.e, 200e9);
+    ASSERT_EQ(m.elements.size(), 3u);
+    EXPECT_EQ(m.elements[0].node_1, 1);
+    EXPECT_EQ(m.elements[0].node_2, 2);
+    EXPECT_EQ(m.elements[1].node_1, 2);
+    EXPECT_EQ(m.elements[1].node_2, 3);
+    EXPECT_EQ(m.elements[2].node_1, 1);
+    EXPECT_EQ(m.elements[2].node_2, 3);
+    for (const auto& e : m.elements) {
+        EXPECT_DOUBLE_EQ(e.area, 1.5);
+        EXPECT_DOUBLE_EQ(e.youngs_modulus, 200e9);
     }
 
-    ASSERT_EQ(m.bcs.size(), 3u);
-    EXPECT_EQ(m.bcs[0].node, 1);
-    EXPECT_EQ(m.bcs[0].dof, 1);
-    EXPECT_EQ(m.bcs[1].node, 1);
-    EXPECT_EQ(m.bcs[1].dof, 2);
-    EXPECT_EQ(m.bcs[2].node, 2);
-    EXPECT_EQ(m.bcs[2].dof, 2);
-    for (const auto& b : m.bcs) EXPECT_DOUBLE_EQ(b.val, 0.0);
+    ASSERT_EQ(m.supports.size(), 3u);
+    EXPECT_EQ(m.supports[0].node_id, 1);
+    EXPECT_EQ(m.supports[0].dof, 1);
+    EXPECT_EQ(m.supports[1].node_id, 1);
+    EXPECT_EQ(m.supports[1].dof, 2);
+    EXPECT_EQ(m.supports[2].node_id, 2);
+    EXPECT_EQ(m.supports[2].dof, 2);
+    for (const auto& b : m.supports) EXPECT_DOUBLE_EQ(b.value, 0.0);
 
-    ASSERT_EQ(m.forces.size(), 2u);
-    EXPECT_EQ(m.forces[0].node, 3);
-    EXPECT_EQ(m.forces[0].dof, 1);
-    EXPECT_DOUBLE_EQ(m.forces[0].val, 5000.0);
-    EXPECT_EQ(m.forces[1].node, 3);
-    EXPECT_EQ(m.forces[1].dof, 2);
-    EXPECT_DOUBLE_EQ(m.forces[1].val, -10000.0);
+    ASSERT_EQ(m.loads.size(), 2u);
+    EXPECT_EQ(m.loads[0].node_id, 3);
+    EXPECT_EQ(m.loads[0].dof, 1);
+    EXPECT_DOUBLE_EQ(m.loads[0].value, 5000.0);
+    EXPECT_EQ(m.loads[1].node_id, 3);
+    EXPECT_EQ(m.loads[1].dof, 2);
+    EXPECT_DOUBLE_EQ(m.loads[1].value, -10000.0);
 
-    EXPECT_EQ(m.load_steps, 10);
+    EXPECT_EQ(m.num_load_steps, 10);
 }
 
 TEST(ReadInput, FinkAndHoweExamplesAreConsistent) {
@@ -58,28 +58,28 @@ TEST(ReadInput, FinkAndHoweExamplesAreConsistent) {
         SCOPED_TRACE(name);
         model m = read_input(kExamples + "/" + name);
         EXPECT_GT(m.nodes.size(), 3u);
-        EXPECT_GT(m.elems.size(), m.nodes.size());
-        EXPECT_GE(m.bcs.size(), 3u);
-        EXPECT_FALSE(m.forces.empty());
-        EXPECT_GT(m.load_steps, 0);
+        EXPECT_GT(m.elements.size(), m.nodes.size());
+        EXPECT_GE(m.supports.size(), 3u);
+        EXPECT_FALSE(m.loads.empty());
+        EXPECT_GT(m.num_load_steps, 0);
         int n = (int)m.nodes.size();
-        for (const auto& e : m.elems) {
-            EXPECT_GE(e.n1, 1);
-            EXPECT_LE(e.n1, n);
-            EXPECT_GE(e.n2, 1);
-            EXPECT_LE(e.n2, n);
-            EXPECT_NE(e.n1, e.n2);
-            EXPECT_GT(e.a, 0.0);
-            EXPECT_GT(e.e, 0.0);
+        for (const auto& e : m.elements) {
+            EXPECT_GE(e.node_1, 1);
+            EXPECT_LE(e.node_1, n);
+            EXPECT_GE(e.node_2, 1);
+            EXPECT_LE(e.node_2, n);
+            EXPECT_NE(e.node_1, e.node_2);
+            EXPECT_GT(e.area, 0.0);
+            EXPECT_GT(e.youngs_modulus, 0.0);
         }
-        for (const auto& b : m.bcs) {
-            EXPECT_GE(b.node, 1);
-            EXPECT_LE(b.node, n);
+        for (const auto& b : m.supports) {
+            EXPECT_GE(b.node_id, 1);
+            EXPECT_LE(b.node_id, n);
             EXPECT_TRUE(b.dof == 1 || b.dof == 2);
         }
-        for (const auto& f : m.forces) {
-            EXPECT_GE(f.node, 1);
-            EXPECT_LE(f.node, n);
+        for (const auto& f : m.loads) {
+            EXPECT_GE(f.node_id, 1);
+            EXPECT_LE(f.node_id, n);
             EXPECT_TRUE(f.dof == 1 || f.dof == 2);
         }
     }
@@ -107,8 +107,8 @@ TEST(ReadInput, IgnoresCommentsAndBlankLines) {
                                  "3\n");
     model m = read_input(p);
     ASSERT_EQ(m.nodes.size(), 2u);
-    ASSERT_EQ(m.elems.size(), 1u);
-    EXPECT_EQ(m.load_steps, 3);
+    ASSERT_EQ(m.elements.size(), 1u);
+    EXPECT_EQ(m.num_load_steps, 3);
 }
 
 TEST(ReadInput, SectionsInAnyOrder) {
@@ -120,11 +120,11 @@ TEST(ReadInput, SectionsInAnyOrder) {
                                  "*ELEMENTS\n1 1 2 1 1\n"
                                  "*NODES\n1 0 0\n2 1 0\n");
     model m = read_input(p);
-    EXPECT_EQ(m.load_steps, 5);
-    ASSERT_EQ(m.forces.size(), 1u);
-    EXPECT_DOUBLE_EQ(m.forces[0].val, 7.0);
-    EXPECT_EQ(m.bcs.size(), 2u);
-    EXPECT_EQ(m.elems.size(), 1u);
+    EXPECT_EQ(m.num_load_steps, 5);
+    ASSERT_EQ(m.loads.size(), 1u);
+    EXPECT_DOUBLE_EQ(m.loads[0].value, 7.0);
+    EXPECT_EQ(m.supports.size(), 2u);
+    EXPECT_EQ(m.elements.size(), 1u);
     EXPECT_EQ(m.nodes.size(), 2u);
 }
 
@@ -147,7 +147,7 @@ TEST(ReadInput, MissingLoadStepsDefaultsToOne) {
     temp_dir d;
     std::string p = d.write_file("in.txt", "*NODES\n1 0 0\n");
     model m = read_input(p);
-    EXPECT_EQ(m.load_steps, 1);
+    EXPECT_EQ(m.num_load_steps, 1);
 }
 
 TEST(ReadInput, HeadersOnlyGivesEmptyModel) {
@@ -156,10 +156,10 @@ TEST(ReadInput, HeadersOnlyGivesEmptyModel) {
         "in.txt", "*NODES\n*ELEMENTS\n*BOUNDARIES\n*FORCES\n*LOAD_STEPS\n");
     model m = read_input(p);
     EXPECT_TRUE(m.nodes.empty());
-    EXPECT_TRUE(m.elems.empty());
-    EXPECT_TRUE(m.bcs.empty());
-    EXPECT_TRUE(m.forces.empty());
-    EXPECT_EQ(m.load_steps, 1);
+    EXPECT_TRUE(m.elements.empty());
+    EXPECT_TRUE(m.supports.empty());
+    EXPECT_TRUE(m.loads.empty());
+    EXPECT_EQ(m.num_load_steps, 1);
 }
 
 TEST(ReadInput, EmptyFileGivesEmptyModel) {
@@ -167,7 +167,7 @@ TEST(ReadInput, EmptyFileGivesEmptyModel) {
     std::string p = d.write_file("in.txt", "");
     model m = read_input(p);
     EXPECT_TRUE(m.nodes.empty());
-    EXPECT_EQ(m.load_steps, 1);
+    EXPECT_EQ(m.num_load_steps, 1);
 }
 
 TEST(ReadInput, DataBeforeAnySectionIsIgnored) {
@@ -191,10 +191,10 @@ TEST(ReadInput, ElementIdColumnIsIgnored) {
                                  "9 1 2 1 1\n"
                                  "4 2 3 2 2\n");
     model m = read_input(p);
-    ASSERT_EQ(m.elems.size(), 2u);
-    EXPECT_EQ(m.elems[0].n1, 1);
-    EXPECT_EQ(m.elems[1].n1, 2);
-    EXPECT_DOUBLE_EQ(m.elems[1].a, 2.0);
+    ASSERT_EQ(m.elements.size(), 2u);
+    EXPECT_EQ(m.elements[0].node_1, 1);
+    EXPECT_EQ(m.elements[1].node_1, 2);
+    EXPECT_DOUBLE_EQ(m.elements[1].area, 2.0);
 }
 
 // Characterization test: this documents CURRENT behaviour, not a spec.

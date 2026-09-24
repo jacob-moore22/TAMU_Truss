@@ -1,5 +1,7 @@
 # TAMU_Truss
 
+[![CI](https://github.com/jacob-moore22/TAMU_Truss/actions/workflows/ci.yml/badge.svg)](https://github.com/jacob-moore22/TAMU_Truss/actions/workflows/ci.yml)
+
 Basic 2D truss FEM solver (direct stiffness method), code split across `src/`/`include/`. No external deps, hand-rolled Gaussian elimination. Ramps the applied loads from 0 to full value over N load steps and dumps a VTK file per step.
 
 ## Build
@@ -30,6 +32,19 @@ ctest --test-dir build-test --output-on-failure
 ```
 
 Tests live in `tests/`, one file per component (`test_solver.cpp`, `test_io.cpp`, `test_vtk_writer.cpp`, `test_driver.cpp`, `test_types.cpp`).
+
+## Documentation
+
+The latest documentation for `main` is published at <https://jacob-moore22.github.io/TAMU_Truss/>.
+
+To build it locally, you need [Doxygen](https://www.doxygen.nl/) (plus Graphviz `dot` for call graphs, if installed):
+
+```
+cmake -B build -DTRUSS_BUILD_DOCS=ON
+cmake --build build --target docs
+```
+
+Open `build/docs/html/index.html` in a browser. With the option on, a normal `cmake --build build` also regenerates the docs.
 
 ## Input format
 

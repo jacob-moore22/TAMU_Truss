@@ -116,7 +116,7 @@ TEST(RunSolver, FinalDisplacementsMatchReference) {
 TEST(RunSolver, SingleLoadStepUsesTwoDigitPadding) {
     temp_dir d;
     model m = triangle_model();
-    m.load_steps = 1;
+    m.num_load_steps = 1;
     std::string out = d.str() + "/run";
     testing::internal::CaptureStdout();
     run_solver(m, out);
@@ -130,7 +130,7 @@ TEST(RunSolver, SingleLoadStepUsesTwoDigitPadding) {
 TEST(RunSolver, ManyLoadStepsWidenPadding) {
     temp_dir d;
     model m = triangle_model();
-    m.load_steps = 150;
+    m.num_load_steps = 150;
     std::string out = d.str() + "/run";
     testing::internal::CaptureStdout();
     run_solver(m, out);
@@ -146,7 +146,7 @@ TEST(RunSolver, ManyLoadStepsWidenPadding) {
 TEST(RunSolver, ZeroLoadStepsTreatedAsOne) {
     temp_dir d;
     model m = triangle_model();
-    m.load_steps = 0;
+    m.num_load_steps = 0;
     std::string out = d.str() + "/run";
     testing::internal::CaptureStdout();
     run_solver(m, out);
@@ -161,10 +161,10 @@ TEST(RunSolver, ZeroLoadStepsTreatedAsOne) {
 TEST(RunSolver, UnconstrainedModelThrows) {
     temp_dir d;
     model m = triangle_model();
-    m.bcs.clear();
+    m.supports.clear();
     // Use O(1) stiffness so the singular-pivot check in gauss_solve fires;
     // see GaussSolve.SingularCheckIsAbsolute in test_solver.cpp.
-    for (auto& e : m.elems) e.e = 1.0;
+    for (auto& e : m.elements) e.youngs_modulus = 1.0;
     std::string out = d.str() + "/run";
     EXPECT_THROW(run_solver(m, out), std::runtime_error);
 }

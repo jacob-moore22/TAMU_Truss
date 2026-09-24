@@ -72,10 +72,10 @@ inline std::string read_all(const std::string& path) {
 inline model triangle_model() {
     model m;
     m.nodes = {{0.0, 0.0}, {10.0, 0.0}, {5.0, 10.0}};
-    m.elems = {{1, 2, 1.5, 200e9}, {2, 3, 1.5, 200e9}, {1, 3, 1.5, 200e9}};
-    m.bcs = {{1, 1, 0.0}, {1, 2, 0.0}, {2, 2, 0.0}};
-    m.forces = {{3, 1, 5000.0}, {3, 2, -10000.0}};
-    m.load_steps = 10;
+    m.elements = {{1, 2, 1.5, 200e9}, {2, 3, 1.5, 200e9}, {1, 3, 1.5, 200e9}};
+    m.supports = {{1, 1, 0.0}, {1, 2, 0.0}, {2, 2, 0.0}};
+    m.loads = {{3, 1, 5000.0}, {3, 2, -10000.0}};
+    m.num_load_steps = 10;
     return m;
 }
 

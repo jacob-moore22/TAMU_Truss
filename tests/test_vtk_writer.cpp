@@ -27,7 +27,7 @@ TEST(WriteVtk, FileStructureForTriangle) {
     std::vector<double> s = {100.5, -200.25, 0};
     std::string path = d.str() + "/out.vtk";
 
-    write_vtk(path, m.nodes, m.elems, u, s);
+    write_vtk(path, m.nodes, m.elements, u, s);
 
     std::vector<std::string> want = {
         "# vtk DataFile Version 3.0",
@@ -71,7 +71,7 @@ TEST(WriteVtk, CreatesMissingParentDirectories) {
     model m = triangle_model();
     std::vector<double> u(6, 0.0), s(3, 0.0);
 
-    EXPECT_NO_THROW(write_vtk(path, m.nodes, m.elems, u, s));
+    EXPECT_NO_THROW(write_vtk(path, m.nodes, m.elements, u, s));
     EXPECT_TRUE(fs::exists(path));
 }
 
@@ -83,7 +83,7 @@ TEST(WriteVtk, UnwritablePathThrows) {
     model m = triangle_model();
     std::vector<double> u(6, 0.0), s(3, 0.0);
 
-    EXPECT_THROW(write_vtk(path, m.nodes, m.elems, u, s), std::exception);
+    EXPECT_THROW(write_vtk(path, m.nodes, m.elements, u, s), std::exception);
 }
 
 TEST(WriteVtk, EmptyGridIsWellFormed) {

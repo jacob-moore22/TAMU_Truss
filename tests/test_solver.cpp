@@ -8,9 +8,8 @@
 
 namespace {
 
-using ke_t = std::array<std::array<double, 4>, 4>;
-
-void expect_matrix_near(const ke_t& got, const ke_t& want, double tol) {
+void expect_matrix_near(const element_matrix& got, const element_matrix& want,
+                        double tol) {
     for (int i = 0; i < 4; ++i)
         for (int j = 0; j < 4; ++j)
             EXPECT_NEAR(got[i][j], want[i][j], tol)
@@ -19,61 +18,65 @@ void expect_matrix_near(const ke_t& got, const ke_t& want, double tol) {
 
 }  // namespace
 
-// ---------------------------------------------------------------- k_local
+// ----------------------------------------------------------------
+// element_stiffness
 
-TEST(KLocal, HorizontalBar) {
+TEST(ElementStiffness, HorizontalBar) {
     double k = 200e9 * 1.5 / 10.0;
-    ke_t ke = k_local({0, 0}, {10, 0}, 1.5, 200e9);
-    ke_t want = {{{k, 0, -k, 0}, {0, 0, 0, 0}, {-k, 0, k, 0}, {0, 0, 0, 0}}};
+    element_matrix ke = element_stiffness({0, 0}, {10, 0}, 1.5, 200e9);
+    element_matrix want = {
+        {{k, 0, -k, 0}, {0, 0, 0, 0}, {-k, 0, k, 0}, {0, 0, 0, 0}}};
     expect_matrix_near(ke, want, k * 1e-12);
 }
 
-TEST(KLocal, VerticalBar) {
+TEST(ElementStiffness, VerticalBar) {
     double k = 200e9 * 1.5 / 4.0;
-    ke_t ke = k_local({3, 1}, {3, 5}, 1.5, 200e9);
-    ke_t want = {{{0, 0, 0, 0}, {0, k, 0, -k}, {0, 0, 0, 0}, {0, -k, 0, k}}};
+    element_matrix ke = element_stiffness({3, 1}, {3, 5}, 1.5, 200e9);
+    element_matrix want = {
+        {{0, 0, 0, 0}, {0, k, 0, -k}, {0, 0, 0, 0}, {0, -k, 0, k}}};
     expect_matrix_near(ke, want, k * 1e-12);
 }
 
-TEST(KLocal, FortyFiveDegreeBar) {
+TEST(ElementStiffness, FortyFiveDegreeBar) {
     double l = std::sqrt(2.0);
     double k = 1.0 * 1.0 / l;
-    ke_t ke = k_local({0, 0}, {1, 1}, 1.0, 1.0);
+    element_matrix ke = element_stiffness({0, 0}, {1, 1}, 1.0, 1.0);
     double h = k / 2.0;
-    ke_t want = {
+    element_matrix want = {
         {{h, h, -h, -h}, {h, h, -h, -h}, {-h, -h, h, h}, {-h, -h, h, h}}};
     expect_matrix_near(ke, want, 1e-14);
 }
 
-TEST(KLocal, IsSymmetric) {
-    ke_t ke = k_local({1, 2}, {4, 7}, 2.0, 3.0);
+TEST(ElementStiffness, IsSymmetric) {
+    element_matrix ke = element_stiffness({1, 2}, {4, 7}, 2.0, 3.0);
     for (int i = 0; i < 4; ++i)
         for (int j = 0; j < 4; ++j) EXPECT_DOUBLE_EQ(ke[i][j], ke[j][i]);
 }
 
-TEST(KLocal, IndependentOfNodeOrder) {
-    ke_t ab = k_local({1, 2}, {4, 7}, 2.0, 3.0);
-    ke_t ba = k_local({4, 7}, {1, 2}, 2.0, 3.0);
+TEST(ElementStiffness, IndependentOfNodeOrder) {
+    element_matrix ab = element_stiffness({1, 2}, {4, 7}, 2.0, 3.0);
+    element_matrix ba = element_stiffness({4, 7}, {1, 2}, 2.0, 3.0);
     expect_matrix_near(ab, ba, 1e-14);
 }
 
-TEST(KLocal, RowSumsAreZero) {
+TEST(ElementStiffness, RowSumsAreZero) {
     // Rigid-body translation (all four dofs equal) produces no force.
-    ke_t ke = k_local({-2, 1}, {3, 4}, 1.7, 2.5e6);
+    element_matrix ke = element_stiffness({-2, 1}, {3, 4}, 1.7, 2.5e6);
     for (int i = 0; i < 4; ++i) {
         double sum = ke[i][0] + ke[i][1] + ke[i][2] + ke[i][3];
         EXPECT_NEAR(sum, 0.0, 1e-6);
     }
 }
 
-// --------------------------------------------------------------- assemble
+// ---------------------------------------------------------------
+// assemble_global_stiffness
 
-TEST(Assemble, SingleElementPlacedAtCorrectDofs) {
+TEST(AssembleGlobalStiffness, SingleElementPlacedAtCorrectDofs) {
     std::vector<node> nodes = {{0, 0}, {5, 0}, {10, 0}};
-    std::vector<elem> elems = {{2, 3, 1.0, 1.0}};  // uses nodes 2 and 3
-    matrix k = assemble(nodes, elems);
+    std::vector<element> elems = {{2, 3, 1.0, 1.0}};  // uses nodes 2 and 3
+    matrix k = assemble_global_stiffness(nodes, elems);
     ASSERT_EQ(k.size(), 6u);
-    ke_t ke = k_local(nodes[1], nodes[2], 1.0, 1.0);
+    element_matrix ke = element_stiffness(nodes[1], nodes[2], 1.0, 1.0);
 
     for (int i = 0; i < 6; ++i)
         for (int j = 0; j < 6; ++j) {
@@ -82,10 +85,10 @@ TEST(Assemble, SingleElementPlacedAtCorrectDofs) {
         }
 }
 
-TEST(Assemble, SharedNodeContributionsSum) {
+TEST(AssembleGlobalStiffness, SharedNodeContributionsSum) {
     std::vector<node> nodes = {{0, 0}, {1, 0}, {2, 0}};
-    std::vector<elem> elems = {{1, 2, 1.0, 1.0}, {2, 3, 1.0, 1.0}};
-    matrix k = assemble(nodes, elems);
+    std::vector<element> elems = {{1, 2, 1.0, 1.0}, {2, 3, 1.0, 1.0}};
+    matrix k = assemble_global_stiffness(nodes, elems);
     // Each bar has k=1; node 2's x-dof gets 1 from each bar.
     EXPECT_DOUBLE_EQ(k[2][2], 2.0);
     EXPECT_DOUBLE_EQ(k[0][0], 1.0);
@@ -95,51 +98,54 @@ TEST(Assemble, SharedNodeContributionsSum) {
     EXPECT_DOUBLE_EQ(k[0][4], 0.0);
 }
 
-TEST(Assemble, IsSymmetric) {
+TEST(AssembleGlobalStiffness, IsSymmetric) {
     model m = triangle_model();
-    matrix k = assemble(m.nodes, m.elems);
+    matrix k = assemble_global_stiffness(m.nodes, m.elements);
     int n = (int)k.size();
     for (int i = 0; i < n; ++i)
         for (int j = 0; j < n; ++j) EXPECT_DOUBLE_EQ(k[i][j], k[j][i]);
 }
 
-TEST(Assemble, UnreferencedNodeRowsStayZero) {
+TEST(AssembleGlobalStiffness, UnreferencedNodeRowsStayZero) {
     std::vector<node> nodes = {{0, 0}, {1, 0}, {5, 5}};
-    std::vector<elem> elems = {{1, 2, 1.0, 1.0}};
-    matrix k = assemble(nodes, elems);
+    std::vector<element> elems = {{1, 2, 1.0, 1.0}};
+    matrix k = assemble_global_stiffness(nodes, elems);
     for (int j = 0; j < 6; ++j) {
         EXPECT_DOUBLE_EQ(k[4][j], 0.0);
         EXPECT_DOUBLE_EQ(k[5][j], 0.0);
     }
 }
 
-// ---------------------------------------------------------------- build_f
+// ----------------------------------------------------------------
+// build_load_vector
 
-TEST(BuildF, SizeAndDefaultZero) {
-    std::vector<double> f = build_f({}, 8);
+TEST(BuildLoadVector, SizeAndDefaultZero) {
+    std::vector<double> f = build_load_vector({}, 8);
     ASSERT_EQ(f.size(), 8u);
     for (double v : f) EXPECT_DOUBLE_EQ(v, 0.0);
 }
 
-TEST(BuildF, MapsNodeDofToIndex) {
-    std::vector<double> f = build_f({{3, 2, -10000.0}, {1, 1, 42.0}}, 6);
+TEST(BuildLoadVector, MapsNodeDofToIndex) {
+    std::vector<double> f =
+        build_load_vector({{3, 2, -10000.0}, {1, 1, 42.0}}, 6);
     EXPECT_DOUBLE_EQ(f[5], -10000.0);
     EXPECT_DOUBLE_EQ(f[0], 42.0);
     EXPECT_DOUBLE_EQ(f[1], 0.0);
     EXPECT_DOUBLE_EQ(f[4], 0.0);
 }
 
-TEST(BuildF, SameDofAccumulates) {
-    std::vector<double> f = build_f({{2, 1, 3.0}, {2, 1, 4.0}}, 4);
+TEST(BuildLoadVector, SameDofAccumulates) {
+    std::vector<double> f = build_load_vector({{2, 1, 3.0}, {2, 1, 4.0}}, 4);
     EXPECT_DOUBLE_EQ(f[2], 7.0);
 }
 
-// --------------------------------------------------------------- apply_bc
+// ---------------------------------------------------------------
+// apply_boundary_conditions
 
-TEST(ApplyBc, ZeroBcClearsRowAndColumn) {
+TEST(ApplyBoundaryConditions, ZeroBcClearsRowAndColumn) {
     matrix k = {{4, 1, 2}, {1, 5, 3}, {2, 3, 6}};
     std::vector<double> f = {10, 20, 30};
-    apply_bc(k, f, {{1, 2, 0.0}});  // dof index 1
+    apply_boundary_conditions(k, f, {{1, 2, 0.0}});  // dof index 1
     EXPECT_DOUBLE_EQ(k[1][1], 1.0);
     EXPECT_DOUBLE_EQ(k[1][0], 0.0);
     EXPECT_DOUBLE_EQ(k[1][2], 0.0);
@@ -154,22 +160,22 @@ TEST(ApplyBc, ZeroBcClearsRowAndColumn) {
     EXPECT_DOUBLE_EQ(f[2], 30.0);
 }
 
-TEST(ApplyBc, PrescribedDisplacementShiftsLoad) {
+TEST(ApplyBoundaryConditions, PrescribedDisplacementShiftsLoad) {
     matrix k = {{4, 1, 2}, {1, 5, 3}, {2, 3, 6}};
     std::vector<double> f = {10, 20, 30};
     double val = 0.5;
-    apply_bc(k, f, {{1, 2, val}});  // dof index 1
+    apply_boundary_conditions(k, f, {{1, 2, val}});  // dof index 1
     EXPECT_DOUBLE_EQ(f[1], val);
     EXPECT_DOUBLE_EQ(f[0], 10.0 - 1.0 * val);
     EXPECT_DOUBLE_EQ(f[2], 30.0 - 3.0 * val);
     EXPECT_DOUBLE_EQ(k[1][1], 1.0);
 }
 
-TEST(ApplyBc, MultipleBcs) {
+TEST(ApplyBoundaryConditions, MultipleBcs) {
     model m = triangle_model();
-    matrix k = assemble(m.nodes, m.elems);
-    std::vector<double> f = build_f(m.forces, 6);
-    apply_bc(k, f, m.bcs);
+    matrix k = assemble_global_stiffness(m.nodes, m.elements);
+    std::vector<double> f = build_load_vector(m.loads, 6);
+    apply_boundary_conditions(k, f, m.supports);
     for (int d : {0, 1, 3}) {
         EXPECT_DOUBLE_EQ(k[d][d], 1.0);
         EXPECT_DOUBLE_EQ(f[d], 0.0);
@@ -229,38 +235,39 @@ TEST(GaussSolve, DoesNotModifyInputs) {
 
 // -------------------------------------------------------------- reactions
 
-TEST(Reactions, ComputesKuMinusF) {
+TEST(ComputeReactions, ComputesKuMinusF) {
     matrix k = {{2, 1}, {1, 3}};
     std::vector<double> u = {1, 2};
     std::vector<double> f = {0.5, 1.0};
-    std::vector<double> r = reactions(k, u, f);
+    std::vector<double> r = compute_reactions(k, u, f);
     EXPECT_DOUBLE_EQ(r[0], 2 * 1 + 1 * 2 - 0.5);
     EXPECT_DOUBLE_EQ(r[1], 1 * 1 + 3 * 2 - 1.0);
 }
 
-// ------------------------------------------------------------ elem_stress
+// ------------------------------------------------------------
+// compute_element_stresses
 
-TEST(ElemStress, AxialStretchOfHorizontalBar) {
+TEST(ComputeElementStresses, AxialStretchOfHorizontalBar) {
     std::vector<node> nodes = {{0, 0}, {2, 0}};
-    std::vector<elem> elems = {{1, 2, 1.0, 100.0}};
+    std::vector<element> elems = {{1, 2, 1.0, 100.0}};
     std::vector<double> u = {0, 0, 0.01, 0};
-    std::vector<double> s = elem_stress(nodes, elems, u);
+    std::vector<double> s = compute_element_stresses(nodes, elems, u);
     ASSERT_EQ(s.size(), 1u);
     EXPECT_NEAR(s[0], 100.0 * 0.01 / 2.0, 1e-12);
 }
 
-TEST(ElemStress, RigidBodyTranslationIsStressFree) {
+TEST(ComputeElementStresses, RigidBodyTranslationIsStressFree) {
     model m = triangle_model();
     std::vector<double> u = {1, -2, 1, -2, 1, -2};
-    std::vector<double> s = elem_stress(m.nodes, m.elems, u);
+    std::vector<double> s = compute_element_stresses(m.nodes, m.elements, u);
     for (double v : s) EXPECT_NEAR(v, 0.0, 1e-3);  // E=200e9 amplifies noise
 }
 
-TEST(ElemStress, CompressionIsNegative) {
+TEST(ComputeElementStresses, CompressionIsNegative) {
     std::vector<node> nodes = {{0, 0}, {0, 3}};
-    std::vector<elem> elems = {{1, 2, 1.0, 10.0}};
+    std::vector<element> elems = {{1, 2, 1.0, 10.0}};
     std::vector<double> u = {0, 0, 0, -0.3};  // node 2 moves toward node 1
-    std::vector<double> s = elem_stress(nodes, elems, u);
+    std::vector<double> s = compute_element_stresses(nodes, elems, u);
     EXPECT_NEAR(s[0], -10.0 * 0.3 / 3.0, 1e-12);
 }
 
@@ -269,14 +276,14 @@ TEST(ElemStress, CompressionIsNegative) {
 TEST(FullSolve, TriangleMatchesReferenceSolution) {
     model m = triangle_model();
     int n_dof = 6;
-    matrix k_orig = assemble(m.nodes, m.elems);
-    std::vector<double> f = build_f(m.forces, n_dof);
+    matrix k_orig = assemble_global_stiffness(m.nodes, m.elements);
+    std::vector<double> f = build_load_vector(m.loads, n_dof);
     matrix k = k_orig;
     std::vector<double> f_bc = f;
-    apply_bc(k, f_bc, m.bcs);
+    apply_boundary_conditions(k, f_bc, m.supports);
     std::vector<double> u = gauss_solve(k, f_bc);
-    std::vector<double> r = reactions(k_orig, u, f);
-    std::vector<double> s = elem_stress(m.nodes, m.elems, u);
+    std::vector<double> r = compute_reactions(k_orig, u, f);
+    std::vector<double> s = compute_element_stresses(m.nodes, m.elements, u);
 
     for (int i = 0; i < 6; ++i)
         EXPECT_NEAR(u[i], kTriRefU[i], 1e-9 * 5.5e-7) << "u[" << i << "]";
@@ -300,12 +307,13 @@ TEST(FullSolve, TriangleMatchesReferenceSolution) {
 // A relative check (pivot / max |K|) would catch it.
 TEST(GaussSolve, SingularCheckIsAbsolute) {
     model m = triangle_model();  // E = 200e9
-    m.bcs.clear();
-    matrix k = assemble(m.nodes, m.elems);
-    std::vector<double> f = build_f(m.forces, 6);
+    m.supports.clear();
+    matrix k = assemble_global_stiffness(m.nodes, m.elements);
+    std::vector<double> f = build_load_vector(m.loads, 6);
     EXPECT_NO_THROW(gauss_solve(k, f));
 
-    for (auto& e : m.elems) e.e = 1.0;  // O(1) entries: check fires
-    matrix k1 = assemble(m.nodes, m.elems);
+    for (auto& e : m.elements)
+        e.youngs_modulus = 1.0;  // O(1) entries: check fires
+    matrix k1 = assemble_global_stiffness(m.nodes, m.elements);
     EXPECT_THROW(gauss_solve(k1, f), std::runtime_error);
 }
