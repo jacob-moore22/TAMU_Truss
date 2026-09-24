@@ -5,16 +5,31 @@ Basic 2D truss FEM solver (direct stiffness method), code split across `src/`/`i
 ## Build
 
 ```
-make
+cmake -B build
+cmake --build build
 ```
+
+Produces `build/truss_solver`. Release (`-O2`) is the default build type.
 
 ## Run
 
 ```
-./truss_solver [input_file] [output_dir]
+./build/truss_solver [input_file] [output_dir]
 ```
 
-Defaults: `input.txt`, `results/`. Example: `./truss_solver examples/fink_truss.txt results_fink`
+Defaults: `examples/input_triangle.txt`, `results/`. Example: `./build/truss_solver examples/fink_truss.txt results_fink`
+
+## Tests
+
+Unit tests use [GoogleTest](https://github.com/google/googletest), fetched by CMake only when `TRUSS_BUILD_TESTS` is on (needs network on first configure):
+
+```
+cmake -B build-test -DTRUSS_BUILD_TESTS=ON
+cmake --build build-test
+ctest --test-dir build-test --output-on-failure
+```
+
+Tests live in `tests/`, one file per component (`test_solver.cpp`, `test_io.cpp`, `test_vtk_writer.cpp`, `test_driver.cpp`, `test_types.cpp`).
 
 ## Input format
 
