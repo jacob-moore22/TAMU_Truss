@@ -1,3 +1,7 @@
+/**
+ * @file test_vtk_writer.cpp
+ * @brief Tests for write_vtk().
+ */
 #include <gtest/gtest.h>
 
 #include <stdexcept>
@@ -5,17 +9,22 @@
 #include "test_helpers.h"
 #include "vtk_writer.h"
 
+/// @brief Fixture with a small two-element model and result data.
 class WriteVtk : public TempDirTest {
    protected:
-    std::vector<node> nodes = {{0, 0}, {2, 0}, {1, 1.5}};
-    std::vector<elem> elems = {{1, 2, 1.0, 1.0}, {2, 3, 1.0, 1.0}};
-    std::vector<double> u = {0, 0, 0.25, -0.5, 1.5, 2};
-    std::vector<double> stresses = {100, -42.5};
+    std::vector<node> nodes = {{0, 0}, {2, 0}, {1, 1.5}};  ///< Test nodes.
+    std::vector<elem> elements = {{1, 2, 1.0, 1.0},
+                                  {2, 3, 1.0, 1.0}};  ///< Test elements.
+    std::vector<double> displacements = {0,    0,   0.25,
+                                         -0.5, 1.5, 2};  ///< Nodal results.
+    std::vector<double> axial_stresses = {100, -42.5};   ///< Element results.
 };
 
+/// @brief The complete file content matches the legacy VTK layout.
 TEST_F(WriteVtk, WritesExpectedLegacyAsciiFile) {
-    auto path = dir_ / "out.vtk";
-    write_vtk(path.string(), nodes, elems, u, stresses);
+    auto output_path = scratch_dir_ / "out.vtk";
+    write_vtk(output_path.string(), nodes, elements, displacements,
+              axial_stresses);
 
     const std::string expected =
         "# vtk DataFile Version 3.0\n"
@@ -42,30 +51,37 @@ TEST_F(WriteVtk, WritesExpectedLegacyAsciiFile) {
         "LOOKUP_TABLE default\n"
         "100\n"
         "-42.5\n";
-    EXPECT_EQ(read_file(path), expected);
+    EXPECT_EQ(read_file(output_path), expected);
 }
 
+/// @brief Displacements read back from the file equal those written.
 TEST_F(WriteVtk, DisplacementsRoundTrip) {
-    auto path = dir_ / "out.vtk";
-    write_vtk(path.string(), nodes, elems, u, stresses);
-    EXPECT_EQ(read_vtk_displacements(path, 3), u);
+    auto output_path = scratch_dir_ / "out.vtk";
+    write_vtk(output_path.string(), nodes, elements, displacements,
+              axial_stresses);
+    EXPECT_EQ(read_vtk_displacements(output_path, 3), displacements);
 }
 
+/// @brief Missing parent directories are created.
 TEST_F(WriteVtk, CreatesMissingParentDirectories) {
-    auto path = dir_ / "a" / "b" / "out.vtk";
-    write_vtk(path.string(), nodes, elems, u, stresses);
-    EXPECT_TRUE(fs::exists(path));
+    auto output_path = scratch_dir_ / "a" / "b" / "out.vtk";
+    write_vtk(output_path.string(), nodes, elements, displacements,
+              axial_stresses);
+    EXPECT_TRUE(fs::exists(output_path));
 }
 
+/// @brief Writing to a path that is a directory throws.
 TEST_F(WriteVtk, ThrowsWhenPathIsADirectory) {
-    EXPECT_THROW(write_vtk(dir_.string(), nodes, elems, u, stresses),
+    EXPECT_THROW(write_vtk(scratch_dir_.string(), nodes, elements,
+                           displacements, axial_stresses),
                  std::runtime_error);
 }
 
+/// @brief Writing below a regular file (as if it were a directory) throws.
 TEST_F(WriteVtk, ThrowsWhenParentIsAFile) {
-    auto blocker = dir_ / "file";
-    write_file(blocker, "x");
-    EXPECT_THROW(
-        write_vtk((blocker / "out.vtk").string(), nodes, elems, u, stresses),
-        std::runtime_error);
+    auto blocking_file = scratch_dir_ / "file";
+    write_file(blocking_file, "x");
+    EXPECT_THROW(write_vtk((blocking_file / "out.vtk").string(), nodes,
+                           elements, displacements, axial_stresses),
+                 std::runtime_error);
 }

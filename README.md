@@ -1,5 +1,7 @@
 # TAMU_Truss
 
+[![CI](https://github.com/jacob-moore22/TAMU_Truss/actions/workflows/ci.yml/badge.svg)](https://github.com/jacob-moore22/TAMU_Truss/actions/workflows/ci.yml) [![Docs](https://github.com/jacob-moore22/TAMU_Truss/actions/workflows/docs.yml/badge.svg)](https://jacob-moore22.github.io/TAMU_Truss/)
+
 Basic 2D truss FEM solver (direct stiffness method), code split across `src/`/`include/`. No external deps, hand-rolled Gaussian elimination. Ramps the applied loads from 0 to full value over N load steps and dumps a VTK file per step.
 
 ## Build
@@ -24,6 +26,16 @@ ctest --test-dir build --output-on-failure
 ```
 
 Defaults: `examples/input_triangle.txt`, `results/`. Example: `./truss_solver examples/fink_truss.txt results_fink`
+
+## Documentation
+
+API docs are generated with Doxygen and published at https://jacob-moore22.github.io/TAMU_Truss/. To build them locally:
+
+```
+doxygen Doxyfile        # or: cmake --build build --target docs
+```
+
+Output goes to `build/doxygen/html/index.html`.
 
 ## Input format
 
