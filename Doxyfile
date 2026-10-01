@@ -1,0 +1,28 @@
+# Doxygen configuration for TAMU_Truss. Only non-default settings are listed.
+# Build locally from the repo root:  doxygen Doxyfile   (or: cmake --build build --target docs)
+# Output: build/doxygen/html/index.html
+
+PROJECT_NAME           = "TAMU_Truss"
+PROJECT_BRIEF          = "2D truss FEM solver (direct stiffness method)"
+OUTPUT_DIRECTORY       = build/doxygen
+
+INPUT                  = README.md include src docs
+FILE_PATTERNS          = *.h *.cpp *.md
+RECURSIVE              = YES
+USE_MDFILE_AS_MAINPAGE = README.md
+STRIP_FROM_PATH        = .
+
+EXTRACT_ALL            = NO
+EXTRACT_STATIC         = YES
+SOURCE_BROWSER         = YES
+
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_TREEVIEW      = YES
+HAVE_DOT               = NO
+
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = YES
+WARN_AS_ERROR          = FAIL_ON_WARNINGS
